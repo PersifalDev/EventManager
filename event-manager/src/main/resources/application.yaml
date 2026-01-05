@@ -21,6 +21,18 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
 
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      group-id: event-manager-group
+      key-deserializer: org.apache.kafka.common.serialization.LongDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "*"
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.LongSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+
 springdoc:
   swagger-ui:
     url: /openapi.yaml
@@ -43,4 +55,4 @@ app:
 scheduler:
   enabled: true
   event-status:
-    fixed-delay-ms: 5000
+    fixed-delay-ms: 60000

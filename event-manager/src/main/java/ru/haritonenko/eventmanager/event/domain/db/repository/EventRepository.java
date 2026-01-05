@@ -4,6 +4,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 import ru.haritonenko.eventmanager.event.domain.status.EventStatus;
 import ru.haritonenko.eventmanager.event.domain.db.entity.EventEntity;
@@ -15,6 +16,7 @@ import java.math.BigDecimal;
 import java.util.Collection;
 import java.util.List;
 
+@Repository
 public interface EventRepository extends JpaRepository<EventEntity, Integer> {
 
     @Transactional(readOnly = true)
@@ -54,18 +56,19 @@ public interface EventRepository extends JpaRepository<EventEntity, Integer> {
                 AND (:locationId IS NULL OR e.location.id = :locationId)
                 AND (:eventStatus IS NULL OR e.status = :eventStatus)
             """)
-    List<EventEntity> searchEventsWithFilter(String name,
-                                             @Param("placesMin") Integer minPlacesCount,
-                                             @Param("placesMax") Integer maxPlacesCount,
-                                             @Param("dateStartAfter") String firstDate,
-                                             @Param("dateStartBefore") String lastDate,
-                                             @Param("costMin") BigDecimal costMin,
-                                             @Param("costMax") BigDecimal costMax,
-                                             @Param("durationMin") Integer durationMin,
-                                             @Param("durationMax") Integer durationMax,
-                                             @Param("locationId") Integer locationId,
-                                             @Param("eventStatus") EventStatus status,
-                                             Pageable pageable
+    List<EventEntity> searchEventsWithFilter(
+            @Param("name") String name,
+            @Param("placesMin") Integer minPlacesCount,
+            @Param("placesMax") Integer maxPlacesCount,
+            @Param("dateStartAfter") String firstDate,
+            @Param("dateStartBefore") String lastDate,
+            @Param("costMin") BigDecimal costMin,
+            @Param("costMax") BigDecimal costMax,
+            @Param("durationMin") Integer durationMin,
+            @Param("durationMax") Integer durationMax,
+            @Param("locationId") Integer locationId,
+            @Param("eventStatus") EventStatus status,
+            Pageable pageable
     );
 
 
