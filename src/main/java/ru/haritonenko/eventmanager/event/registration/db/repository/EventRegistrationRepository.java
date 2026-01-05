@@ -10,6 +10,7 @@ import ru.haritonenko.eventmanager.event.registration.status.EventRegistrationSt
 
 import java.util.Optional;
 
+@Repository
 public interface EventRegistrationRepository extends JpaRepository<EventRegistrationEntity, Integer> {
 
     @Transactional(readOnly = true)
