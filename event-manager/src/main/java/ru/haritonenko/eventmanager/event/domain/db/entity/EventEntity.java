@@ -12,15 +12,15 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
+@Entity
+@Table(name = "events")
 @Builder
 @Getter
 @Setter
-@ToString(exclude = {"owner", "location", "registrations"})
-@EqualsAndHashCode(onlyExplicitlyIncluded = true)
-@Entity
-@Table(name = "events")
 @NoArgsConstructor
 @AllArgsConstructor
+@ToString(exclude = {"owner", "location", "registrations"})
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class EventEntity {
 
     @Id
@@ -44,13 +44,13 @@ public class EventEntity {
     @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<EventRegistrationEntity> registrations = new ArrayList<>();
 
-    @NotNull(message = "Event maxPlaces can not be null")
-    @Min(value = 0, message = "Min count of maxPlaces is 0")
+    @NotNull(message = "Event max places can not be null")
+    @Min(value = 0, message = "Min count of max places is 0")
     @Column(name = "max_places")
     private Integer maxPlaces;
 
-    @NotNull(message = "Event occupiedPlaces can not be null")
-    @Min(value = 0, message = "Min count of occupiedPlaces is 0")
+    @NotNull(message = "Event occupied places can not be null")
+    @Min(value = 0, message = "Min count of occupied places is 0")
     @Column(name = "occupied_places")
     private Integer occupiedPlaces;
 

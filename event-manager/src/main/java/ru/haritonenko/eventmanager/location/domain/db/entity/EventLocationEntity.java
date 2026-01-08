@@ -11,13 +11,13 @@ import ru.haritonenko.eventmanager.event.domain.db.entity.EventEntity;
 import java.util.ArrayList;
 import java.util.List;
 
+@Entity
+@Table(name = "locations")
 @Builder
 @Getter
 @Setter
 @ToString(exclude = {"events"})
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
-@Entity
-@Table(name = "locations")
 @NoArgsConstructor
 @AllArgsConstructor
 public class EventLocationEntity {

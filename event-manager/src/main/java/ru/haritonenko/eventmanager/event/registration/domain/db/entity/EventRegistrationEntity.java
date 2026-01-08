@@ -7,11 +7,6 @@ import ru.haritonenko.eventmanager.event.domain.db.entity.EventEntity;
 import ru.haritonenko.eventmanager.event.registration.domain.status.EventRegistrationStatus;
 import ru.haritonenko.eventmanager.user.domain.db.entity.UserEntity;
 
-@Builder
-@Getter
-@Setter
-@ToString(exclude = {"user", "event"})
-@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @Entity
 @Table(
         name = "event_registrations",
@@ -20,6 +15,11 @@ import ru.haritonenko.eventmanager.user.domain.db.entity.UserEntity;
                 columnNames = {"user_id", "event_id"}
         )
 )
+@Builder
+@Getter
+@Setter
+@ToString(exclude = {"user", "event"})
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @NoArgsConstructor
 @AllArgsConstructor
 public class EventRegistrationEntity {

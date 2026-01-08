@@ -13,13 +13,13 @@ import ru.haritonenko.eventmanager.user.domain.role.UserRole;
 import java.util.ArrayList;
 import java.util.List;
 
+@Entity
+@Table(name = "users")
 @Builder
 @Getter
 @Setter
 @ToString(exclude = {"password", "ownEvents", "registrations"})
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
-@Entity
-@Table(name = "users")
 @NoArgsConstructor
 @AllArgsConstructor
 public class UserEntity {

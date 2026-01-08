@@ -15,13 +15,13 @@ public record EventDto(
         @NotBlank(message = "Event name can not be blank")
         @Size(min = 1, max = 50, message = "Min name size is 1, max is 50")
         String name,
-        @NotBlank(message = "Event ownerId can not be blank")
+        @NotBlank(message = "Event owner id can not be blank")
         String ownerId,
-        @NotNull(message = "Event maxPlaces can not be null")
-        @Min(value = 0, message = "Min count of maxPlaces is 0")
+        @NotNull(message = "Event max places can not be null")
+        @Min(value = 0, message = "Min count of max places is 0")
         Integer maxPlaces,
-        @NotNull(message = "Event occupiedPlaces can not be null")
-        @Min(value = 0, message = "Min count of occupiedPlaces is 0")
+        @NotNull(message = "Event occupied places can not be null")
+        @Min(value = 0, message = "Min count of occupied places is 0")
         Integer occupiedPlaces,
         @NotBlank(message = "Event date can not be blank")
         @NotPastDateTime(message = "date must be now or in the future")
@@ -32,7 +32,7 @@ public record EventDto(
         @NotNull(message = "Event duration can not be null")
         @Min(value = 30, message = "Min duration is 30")
         Integer duration,
-        @NotNull(message = "Event locationId can not be null")
+        @NotNull(message = "Event location id can not be null")
         Integer locationId,
         @NotNull(message = "Event status can not be null")
         EventStatus status

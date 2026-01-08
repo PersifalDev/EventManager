@@ -89,7 +89,7 @@ public class EventController {
     }
 
     @PostMapping("/registrations/{id}")
-    public ResponseEntity<EventDto> registerUserOnEvent(
+    public EventDto registerUserOnEvent(
             @PathVariable("id") Integer eventId
     ) {
         log.info("Post request for register a new user on event with eventId: {}", eventId);
@@ -97,9 +97,7 @@ public class EventController {
                 getAuthenticatedUser().id(),
                 eventId
         );
-        return ResponseEntity
-                .status(HttpStatus.OK)
-                .body(mapper.toDto(eventThatUserRegisteredOn));
+        return mapper.toDto(eventThatUserRegisteredOn);
     }
 
     @PutMapping("/{id}")

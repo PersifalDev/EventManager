@@ -9,8 +9,8 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import ru.haritonenko.commonlibs.dto.error.ErrorMessageResponse;
-import ru.haritonenko.eventmanager.event.exception.EventCountPlacesException;
-import ru.haritonenko.eventmanager.event.exception.EventInvalidStatusException;
+import ru.haritonenko.eventmanager.event.exception.EventCountPlacesUpdateException;
+import ru.haritonenko.eventmanager.event.exception.NotValidEventStatusException;
 import ru.haritonenko.eventmanager.event.exception.EventNotFoundException;
 import ru.haritonenko.eventmanager.event.exception.EventPlacesOverflowException;
 import ru.haritonenko.eventmanager.location.domain.exception.LocationCountPlacesException;
@@ -154,11 +154,11 @@ public class GlobalExceptionHandler {
                 .body(errorDto);
     }
 
-    @ExceptionHandler(EventCountPlacesException.class)
-    public ResponseEntity<ErrorMessageResponse> handleEventCountPlacesException(
-            EventCountPlacesException ex
+    @ExceptionHandler(EventCountPlacesUpdateException.class)
+    public ResponseEntity<ErrorMessageResponse> handleEventCountPlacesUpdateException(
+            EventCountPlacesUpdateException ex
     ) {
-        log.warn("Got EventCountPlacesException", ex);
+        log.warn("Got EventCountPlacesUpdateException", ex);
         var errorDto = getErrorMessageResponse("Error while matching location and event places count",
                 ex.getMessage());
         return ResponseEntity.
@@ -178,11 +178,11 @@ public class GlobalExceptionHandler {
                 .body(errorDto);
     }
 
-    @ExceptionHandler(EventInvalidStatusException.class)
-    public ResponseEntity<ErrorMessageResponse> handleEventInvalidStatusException(
-            EventInvalidStatusException ex
+    @ExceptionHandler(NotValidEventStatusException.class)
+    public ResponseEntity<ErrorMessageResponse> handleNotValidEventStatusException(
+            NotValidEventStatusException ex
     ) {
-        log.warn("Got EventInvalidStatusException", ex);
+        log.warn("Got NotValidEventStatusException", ex);
         var errorDto = getErrorMessageResponse("Error while checking status for deleting" +
                         " event or registration request",
                 ex.getMessage());

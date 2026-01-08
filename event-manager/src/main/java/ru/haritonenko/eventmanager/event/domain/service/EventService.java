@@ -9,8 +9,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.haritonenko.commonlibs.dto.changes.EventFieldChange;
 import ru.haritonenko.commonlibs.dto.notification.EventChangeKafkaMessage;
-import ru.haritonenko.eventmanager.event.exception.EventCountPlacesException;
-import ru.haritonenko.eventmanager.event.exception.EventInvalidStatusException;
+import ru.haritonenko.eventmanager.event.exception.EventCountPlacesUpdateException;
+import ru.haritonenko.eventmanager.event.exception.NotValidEventStatusException;
 import ru.haritonenko.eventmanager.event.exception.EventNotFoundException;
 import ru.haritonenko.eventmanager.location.domain.exception.LocationNotFoundException;
 import ru.haritonenko.eventmanager.event.registration.domain.exception.EventRegistrationNotFoundException;
@@ -370,7 +370,7 @@ public class EventService {
     public void checkEventStatusIsWaitStartOrThrow(EventEntity event) {
         if (event.getStatus() != EventStatus.WAIT_START) {
             log.warn("Error while checking event status to delete event or cancel registration");
-            throw new EventInvalidStatusException("Event status is not WAIT_START for that action");
+            throw new NotValidEventStatusException("Event status is not WAIT_START for that action");
         }
     }
 
@@ -384,7 +384,7 @@ public class EventService {
     private void checkLocationCapacityIsMoreOrEqualsEventPlacesOrThrow(EventLocationEntity location, Integer eventPlaces) {
         if (location.getCapacity() < eventPlaces) {
             log.warn("Error while matching location and event places count");
-            throw new EventCountPlacesException(
+            throw new EventCountPlacesUpdateException(
                     "Location capacity is less than event maxPlaces. Chose new location or decrease quantity of event places."
             );
         }
@@ -407,7 +407,7 @@ public class EventService {
     private void checkCountOfOccupiedPlacesLessThanMaxOrThrow(EventUpdateRequestDto eventToUpdate, EventEntity event) {
         if (eventToUpdate.maxPlaces() < event.getOccupiedPlaces()) {
             log.warn("Error while checking count of places");
-            throw new EventCountPlacesException("Occupied places can't be more than event maxPlaces ");
+            throw new EventCountPlacesUpdateException("Occupied places can't be more than event maxPlaces ");
         }
     }
 
