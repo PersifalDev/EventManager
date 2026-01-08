@@ -56,7 +56,6 @@ public interface EventRepository extends JpaRepository<EventEntity, Integer> {
                 AND (:locationId IS NULL OR e.location.id = :locationId)
                 AND (:eventStatus IS NULL OR e.status = :eventStatus)
             """)
-<<<<<<<< HEAD:event-manager/src/main/java/ru/haritonenko/eventmanager/event/domain/db/repository/EventRepository.java
     List<EventEntity> searchEventsWithFilter(
             @Param("name") String name,
             @Param("placesMin") Integer minPlacesCount,
@@ -70,20 +69,6 @@ public interface EventRepository extends JpaRepository<EventEntity, Integer> {
             @Param("locationId") Integer locationId,
             @Param("eventStatus") EventStatus status,
             Pageable pageable
-========
-    List<EventEntity> searchEventsWithFilter(@Param("name") String name,
-                                             @Param("placesMin") Integer minPlacesCount,
-                                             @Param("placesMax") Integer maxPlacesCount,
-                                             @Param("dateStartAfter") String firstDate,
-                                             @Param("dateStartBefore") String lastDate,
-                                             @Param("costMin") BigDecimal costMin,
-                                             @Param("costMax") BigDecimal costMax,
-                                             @Param("durationMin") Integer durationMin,
-                                             @Param("durationMax") Integer durationMax,
-                                             @Param("locationId") Integer locationId,
-                                             @Param("eventStatus") EventStatus status,
-                                             Pageable pageable
->>>>>>>> origin/master:src/main/java/ru/haritonenko/eventmanager/event/domain/db/repository/EventRepository.java
     );
 
 
