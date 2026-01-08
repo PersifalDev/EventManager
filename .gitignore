@@ -1,19 +1,5 @@
-# IntelliJ IDEA
 .idea/
 *.iml
-*.iws
-*.ipr
-
-# Local / tools
 .local/
-amplicode.xml
-
-# Maven / Gradle
 **/target/
-
-# Logs
-*.log
-
-# OS files
-.DS_Store
-Thumbs.db
+amplicode.xml

@@ -15,8 +15,6 @@
 
     <modules>
         <module>event-manager</module>
-        <module>event-notificator</module>
-        <module>common-libs</module>
     </modules>
 
     <properties>
