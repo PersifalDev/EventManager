@@ -1,5 +1,25 @@
+### IntelliJ IDEA ###
 .idea/
 *.iml
-.local/
+*.ipr
+*.iws
+out/
+
+### Maven ###
 **/target/
+!.mvn/wrapper/maven-wrapper.jar
+
+### Gradle (если вдруг) ###
+.gradle/
+**/build/
+
+### Logs ###
+*.log
+
+### OS ###
+.DS_Store
+Thumbs.db
+
+### Tools / local stuff ###
+.local/
 amplicode.xml
