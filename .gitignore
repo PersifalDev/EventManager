@@ -31,3 +31,8 @@ build/
 
 ### VS Code ###
 .vscode/
+
+
+# keep event-manager kafka package tracked
+!event-manager/src/main/java/ru/haritonenko/eventmanager/kafka/
+!event-manager/src/main/java/ru/haritonenko/eventmanager/kafka/**
