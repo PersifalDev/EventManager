@@ -21,6 +21,9 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
 
+  kafka:
+    bootstrap-servers: localhost:9092
+
 springdoc:
   swagger-ui:
     url: /openapi.yaml
@@ -43,4 +46,7 @@ app:
 scheduler:
   enabled: true
   event-status:
-    fixed-delay-ms: 5000
+    fixed-delay-ms: 60000
+
+
+kafka-topic: event-changed-topic
