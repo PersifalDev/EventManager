@@ -12,4 +12,5 @@ public record AuthUser(
         String login,
         @NotBlank(message = "User role can not be blank")
         String role
-) {}
+) {
+}

@@ -11,9 +11,9 @@ import ru.haritonenko.commonlibs.dto.notification.EventChangeKafkaMessage;
 import ru.haritonenko.commonlibs.securirty.user.AuthUser;
 import ru.haritonenko.eventnotificator.api.dto.filter.EventNotificationPageFilter;
 import ru.haritonenko.eventnotificator.domain.EventNotification;
-import ru.haritonenko.eventnotificator.domain.converter.EventNotificationDomainConverter;
 import ru.haritonenko.eventnotificator.domain.db.entity.EventNotificationEntity;
 import ru.haritonenko.eventnotificator.domain.db.repository.EventNotificationRepository;
+import ru.haritonenko.eventnotificator.domain.mapper.EventNotificationEntityMapper;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -28,7 +28,7 @@ import static java.util.Objects.nonNull;
 public class EventNotificationService {
 
     private final EventNotificationRepository notificationRepository;
-    private final EventNotificationDomainConverter converter;
+    private final EventNotificationEntityMapper mapper;
 
     @Value("${app.location.default-page-size:5}")
     private int defaultPageSize;
@@ -46,7 +46,7 @@ public class EventNotificationService {
         }
         return notificationRepository.findAllUnredNotificationsByUserId(user.id(), getPageable(pageFilter))
                 .stream()
-                .map(converter::toDomain)
+                .map(mapper::toDomain)
                 .sorted(Comparator.comparing(EventNotification::id))
                 .collect(Collectors.toList());
     }

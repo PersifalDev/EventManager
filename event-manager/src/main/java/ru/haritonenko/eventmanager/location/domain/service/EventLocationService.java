@@ -3,17 +3,16 @@ package ru.haritonenko.eventmanager.location.domain.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.haritonenko.commonlibs.error.exceptions.location_exception.exception.LocationCountPlacesException;
-import ru.haritonenko.commonlibs.error.exceptions.location_exception.exception.LocationNotFoundException;
-import ru.haritonenko.eventmanager.location.domain.converter.EventLocationEntityConverter;
+import ru.haritonenko.eventmanager.location.domain.exception.LocationCountPlacesException;
+import ru.haritonenko.eventmanager.location.domain.exception.LocationNotFoundException;
+import ru.haritonenko.eventmanager.location.api.dto.filter.EventLocationSearchFilter;
 import ru.haritonenko.eventmanager.location.domain.EventLocation;
 import ru.haritonenko.eventmanager.location.domain.db.entity.EventLocationEntity;
-import ru.haritonenko.eventmanager.location.api.dto.filter.EventLocationSearchFilter;
 import ru.haritonenko.eventmanager.location.domain.db.repository.EventLocationRepository;
-
-import org.springframework.data.domain.Pageable;
+import ru.haritonenko.eventmanager.location.domain.mapper.EventLocationEntityMapper;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -27,7 +26,7 @@ import java.util.stream.Collectors;
 public class EventLocationService {
 
     private final EventLocationRepository locationRepository;
-    private final EventLocationEntityConverter converter;
+    private final EventLocationEntityMapper mapper;
 
     @Value("${app.location.default-page-size}")
     private int defaultPageSize;
@@ -47,13 +46,14 @@ public class EventLocationService {
         Pageable pageable = Pageable
                 .ofSize(pageSize)
                 .withPage(pageNumber);
+
         return locationRepository.searchLocations(
                         locationFilter.name(),
                         locationFilter.address(),
                         pageable
                 )
                 .stream()
-                .map(converter::toDomain)
+                .map(mapper::toDomain)
                 .sorted(Comparator.comparing(EventLocation::id))
                 .collect(Collectors.toList());
     }
@@ -61,17 +61,11 @@ public class EventLocationService {
     @Transactional
     public EventLocation createLocation(EventLocation eventLocationToCreate) {
         log.info("Creating a location");
-        var newLocation = new EventLocationEntity(
-                eventLocationToCreate.id(),
-                eventLocationToCreate.name(),
-                eventLocationToCreate.address(),
-                eventLocationToCreate.capacity(),
-                eventLocationToCreate.description(),
-                new ArrayList<>()
-        );
+        EventLocationEntity newLocation = mapper.toEntity(eventLocationToCreate);
+        newLocation.setEvents(new ArrayList<>());
         var savedLocationEntity = locationRepository.save(newLocation);
         log.info("Location was successfully created");
-        return converter.toDomain(savedLocationEntity);
+        return mapper.toDomain(savedLocationEntity);
     }
 
     @Transactional(readOnly = true)
@@ -84,13 +78,13 @@ public class EventLocationService {
                             "No found location by id = %s".formatted(id));
                 });
         log.info("Location was successfully found by id: {}", id);
-        return converter.toDomain(foundLocation);
+        return mapper.toDomain(foundLocation);
     }
 
     public EventLocation updateLocation(Integer id, EventLocation eventLocationToUpdate) {
         log.info("Updating location with id: {}", id);
         checkLocationIsExistedByIdOrThrow(id);
-        checkNewLocationCapacityMoreOrEqualsOldOrThrow(id,eventLocationToUpdate);
+        checkNewLocationCapacityMoreOrEqualsOldOrThrow(id, eventLocationToUpdate);
         locationRepository.updateLocation(
                 id,
                 eventLocationToUpdate.name(),
@@ -99,8 +93,7 @@ public class EventLocationService {
                 eventLocationToUpdate.description()
         );
         log.info("Location with id: {} was successfully updated", id);
-        return converter.toDomain(
-                locationRepository.findById(id).orElseThrow());
+        return mapper.toDomain(locationRepository.findById(id).orElseThrow());
     }
 
     @Transactional
@@ -124,13 +117,14 @@ public class EventLocationService {
     private void checkNewLocationCapacityMoreOrEqualsOldOrThrow(
             Integer id,
             EventLocation eventLocationToUpdate
-    ){
-         var oldLocation = locationRepository.findById(id)
+    ) {
+        var oldLocation = locationRepository.findById(id)
                 .orElseThrow(() -> {
                     log.warn("Error while getting location by id: {}", id);
                     return new LocationNotFoundException(
                             "No found location by id = %s".formatted(id));
                 });
+
         if (oldLocation.getCapacity() < eventLocationToUpdate.capacity()) {
             log.warn("Error while changing location capacity ");
             throw new LocationCountPlacesException("You can't decrease location capacity, " +

@@ -1,11 +1,7 @@
 package ru.haritonenko.eventnotificator.domain;
 
-
-import lombok.Builder;
-
 import java.time.LocalDateTime;
 
-@Builder
 public record EventNotification(
         Integer id,
         Integer userId,
@@ -13,4 +9,5 @@ public record EventNotification(
         LocalDateTime createdAt,
         boolean read,
         String message
-) {}
+) {
+}

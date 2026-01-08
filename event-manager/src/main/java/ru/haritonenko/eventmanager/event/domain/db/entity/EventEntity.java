@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.*;
 import ru.haritonenko.eventmanager.event.domain.status.EventStatus;
-import ru.haritonenko.eventmanager.event.registration.db.entity.EventRegistrationEntity;
+import ru.haritonenko.eventmanager.event.registration.domain.db.entity.EventRegistrationEntity;
 import ru.haritonenko.eventmanager.location.domain.db.entity.EventLocationEntity;
 import ru.haritonenko.eventmanager.user.domain.db.entity.UserEntity;
 

@@ -4,7 +4,6 @@ import jakarta.validation.constraints.*;
 import lombok.Builder;
 import ru.haritonenko.eventmanager.event.domain.custom.validation.annotation.NotPastDateTime;
 
-@Builder
 public record EventCreateRequestDto(
         @NotBlank(message = "Event name can not be blank")
         @Size(min = 1, max = 50, message = "Min name size is 1, max is 50")

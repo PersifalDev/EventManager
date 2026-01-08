@@ -8,13 +8,13 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
-import ru.haritonenko.eventmanager.user.security.service.AuthenticationService;
-import ru.haritonenko.eventmanager.user.security.jwt.response.JwtResponse;
-import ru.haritonenko.eventmanager.user.domain.converter.UserDtoConverter;
 import ru.haritonenko.eventmanager.user.api.dto.UserDto;
 import ru.haritonenko.eventmanager.user.api.dto.authorization.UserCredentials;
 import ru.haritonenko.eventmanager.user.api.dto.registration.UserRegistration;
+import ru.haritonenko.eventmanager.user.domain.mapper.UserDtoMapper;
 import ru.haritonenko.eventmanager.user.domain.service.UserService;
+import ru.haritonenko.eventmanager.user.security.jwt.response.JwtResponse;
+import ru.haritonenko.eventmanager.user.security.service.AuthenticationService;
 
 import java.util.Map;
 
@@ -27,7 +27,7 @@ import static java.util.Objects.isNull;
 public class UserController {
 
     private final UserService userService;
-    private final UserDtoConverter converter;
+    private final UserDtoMapper mapper;
     private final AuthenticationService jwtAuthenticationService;
 
     @GetMapping("/{id}")
@@ -37,7 +37,7 @@ public class UserController {
     ) {
         log.info("Get request for getting user by id: {}", id);
         var foundUser = userService.getUserById(id);
-        return converter.toDto(foundUser);
+        return mapper.toDto(foundUser);
     }
 
     @PostMapping
@@ -48,7 +48,7 @@ public class UserController {
         var registeredUser = userService.register(userFromSignUpRequest);
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(converter.toDto(registeredUser));
+                .body(mapper.toDto(registeredUser));
     }
 
     @PostMapping("/auth")

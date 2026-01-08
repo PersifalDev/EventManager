@@ -8,7 +8,6 @@ import ru.haritonenko.eventmanager.event.domain.status.EventStatus;
 
 import java.math.BigDecimal;
 
-@Builder
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public record EventDto(
         @Null

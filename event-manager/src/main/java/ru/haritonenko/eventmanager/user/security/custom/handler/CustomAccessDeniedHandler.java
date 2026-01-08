@@ -11,7 +11,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.stereotype.Component;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import ru.haritonenko.commonlibs.error.errorDto.ErrorMessageResponse;
+import ru.haritonenko.commonlibs.dto.error.ErrorMessageResponse;
 
 import java.io.IOException;
 import java.time.LocalDateTime;

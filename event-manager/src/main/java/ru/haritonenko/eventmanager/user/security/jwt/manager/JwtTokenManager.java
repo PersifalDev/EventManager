@@ -40,15 +40,6 @@ public class JwtTokenManager {
                 .compact();
     }
 
-    public String getLoginFromToken(String jwt) {
-        return Jwts.parser()
-                .verifyWith(key)
-                .build()
-                .parseSignedClaims(jwt)
-                .getPayload()
-                .getSubject();
-    }
-
     public AuthUser getAuthUserFromToken(String jwt) {
         Claims claims = Jwts.parser()
                 .verifyWith(key)

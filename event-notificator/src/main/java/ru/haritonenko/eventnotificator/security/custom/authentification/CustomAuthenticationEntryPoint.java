@@ -10,7 +10,7 @@ import org.springframework.http.MediaType;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.stereotype.Component;
-import ru.haritonenko.commonlibs.error.errorDto.ErrorMessageResponse;
+import ru.haritonenko.commonlibs.dto.error.ErrorMessageResponse;
 
 import java.io.IOException;
 import java.time.LocalDateTime;

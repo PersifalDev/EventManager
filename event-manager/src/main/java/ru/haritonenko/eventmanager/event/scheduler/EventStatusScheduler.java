@@ -8,8 +8,8 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.haritonenko.eventmanager.event.domain.status.EventStatus;
 import ru.haritonenko.eventmanager.event.domain.db.entity.EventEntity;
 import ru.haritonenko.eventmanager.event.domain.db.repository.EventRepository;
-import ru.haritonenko.eventmanager.event.registration.db.repository.EventRegistrationRepository;
-import ru.haritonenko.eventmanager.event.registration.status.EventRegistrationStatus;
+import ru.haritonenko.eventmanager.event.registration.domain.db.repository.EventRegistrationRepository;
+import ru.haritonenko.eventmanager.event.registration.domain.status.EventRegistrationStatus;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;

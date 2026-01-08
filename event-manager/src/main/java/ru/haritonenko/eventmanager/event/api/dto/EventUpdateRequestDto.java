@@ -1,12 +1,10 @@
 package ru.haritonenko.eventmanager.event.api.dto;
 
 import jakarta.validation.constraints.*;
-import lombok.Builder;
 import ru.haritonenko.eventmanager.event.domain.custom.validation.annotation.NotPastDateTime;
 
 import java.math.BigDecimal;
 
-@Builder
 public record EventUpdateRequestDto(
         @NotBlank(message = "Event name can not be blank")
         @Size(min = 1, max = 50, message = "Min name size is 1, max is 50")

@@ -35,7 +35,7 @@ public interface EventNotificationRepository extends JpaRepository<EventNotifica
                   AND n.id IN :ids
                   AND n.read = false
             """)
-    int markUserNotificationsAsRead(
+    void markUserNotificationsAsRead(
             @Param("userId") Integer userId,
             @Param("ids") List<Integer> ids
     );

@@ -7,12 +7,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.haritonenko.commonlibs.securirty.user.AuthUser;
-import ru.haritonenko.eventmanager.event.domain.converter.EventDtoConverter;
 import ru.haritonenko.eventmanager.event.api.dto.EventCreateRequestDto;
 import ru.haritonenko.eventmanager.event.api.dto.EventDto;
 import ru.haritonenko.eventmanager.event.api.dto.EventUpdateRequestDto;
 import ru.haritonenko.eventmanager.event.api.dto.filter.EventPageFilter;
 import ru.haritonenko.eventmanager.event.api.dto.filter.EventSearchRequestDto;
+import ru.haritonenko.eventmanager.event.domain.mapper.EventDtoMapper;
 import ru.haritonenko.eventmanager.event.domain.service.EventService;
 import ru.haritonenko.eventmanager.user.security.service.AuthenticationService;
 
@@ -25,7 +25,7 @@ import java.util.List;
 public class EventController {
 
     private final EventService eventService;
-    private final EventDtoConverter converter;
+    private final EventDtoMapper mapper;
     private final AuthenticationService authenticationService;
 
     @GetMapping("/{id}")
@@ -34,7 +34,7 @@ public class EventController {
     ) {
         log.info("Get request for getting event by id: {}", id);
         var foundEvent = eventService.getEventById(id);
-        return converter.toDto(foundEvent);
+        return mapper.toDto(foundEvent);
     }
 
     @GetMapping("/my")
@@ -44,7 +44,7 @@ public class EventController {
         log.info("Get request for getting events created by user");
         return eventService.findEventsCreatedByUser(getAuthenticatedUser(), pageFilter)
                 .stream()
-                .map(converter::toDto)
+                .map(mapper::toDto)
                 .toList();
     }
 
@@ -55,7 +55,7 @@ public class EventController {
         log.info("Get request for getting events booked by user");
         return eventService.findBookedEventByUserId(getAuthenticatedUser(), pageFilter)
                 .stream()
-                .map(converter::toDto)
+                .map(mapper::toDto)
                 .toList();
     }
 
@@ -70,7 +70,7 @@ public class EventController {
         );
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(converter.toDto(createdEvent));
+                .body(mapper.toDto(createdEvent));
     }
 
     @PostMapping("/search")
@@ -81,7 +81,7 @@ public class EventController {
         log.info("Post request for search a new event with filter: {}", eventFromSearchWithFilterRequest);
         var foundEvents = eventService.searchEventWithFilter(eventFromSearchWithFilterRequest, pageFilter)
                 .stream()
-                .map(converter::toDto)
+                .map(mapper::toDto)
                 .toList();
         return ResponseEntity
                 .status(HttpStatus.OK)
@@ -99,7 +99,7 @@ public class EventController {
         );
         return ResponseEntity
                 .status(HttpStatus.OK)
-                .body(converter.toDto(eventThatUserRegisteredOn));
+                .body(mapper.toDto(eventThatUserRegisteredOn));
     }
 
     @PutMapping("/{id}")
@@ -113,7 +113,7 @@ public class EventController {
                         getAuthenticatedUser().id(),
                         eventId,
                         eventFromUpdateRequest);
-        return converter.toDto(updatedEvent);
+        return mapper.toDto(updatedEvent);
     }
 
     @DeleteMapping("/{id}")

@@ -6,11 +6,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import ru.haritonenko.eventmanager.location.domain.converter.EventLocationDtoConverter;
 import ru.haritonenko.eventmanager.location.api.dto.EventLocationCreateRequestDto;
 import ru.haritonenko.eventmanager.location.api.dto.EventLocationDto;
 import ru.haritonenko.eventmanager.location.api.dto.EventLocationUpdateRequestDto;
 import ru.haritonenko.eventmanager.location.api.dto.filter.EventLocationSearchFilter;
+import ru.haritonenko.eventmanager.location.domain.mapper.EventLocationDtoMapper;
 import ru.haritonenko.eventmanager.location.domain.service.EventLocationService;
 
 import java.util.List;
@@ -22,7 +22,7 @@ import java.util.List;
 public class EventLocationController {
 
     private final EventLocationService locationService;
-    private final EventLocationDtoConverter converter;
+    private final EventLocationDtoMapper mapper;
 
     @GetMapping
     public List<EventLocationDto> searchAllLocations(
@@ -31,7 +31,7 @@ public class EventLocationController {
         log.info("Get request for getting all locations");
         return locationService.getAllLocations(locationFilter)
                 .stream()
-                .map(converter::toDto)
+                .map(mapper::toDto)
                 .toList();
     }
 
@@ -41,7 +41,7 @@ public class EventLocationController {
     ) {
         log.info("Get request for getting location by id: {}", id);
         var foundLocation = locationService.getLocationById(id);
-        return converter.toDto(foundLocation);
+        return mapper.toDto(foundLocation);
     }
 
     @PostMapping
@@ -49,11 +49,12 @@ public class EventLocationController {
             @RequestBody @Valid EventLocationCreateRequestDto locationFromCreateRequest
     ) {
         log.info("Post request for creation a new location: {}", locationFromCreateRequest);
-        var createdLocation = locationService
-                .createLocation(converter.fromCreateDtoToDomain(locationFromCreateRequest));
+        var createdLocation = locationService.createLocation(
+                mapper.fromCreateDto(locationFromCreateRequest)
+        );
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(converter.toDto(createdLocation));
+                .body(mapper.toDto(createdLocation));
     }
 
     @PutMapping("/{id}")
@@ -62,9 +63,11 @@ public class EventLocationController {
             @RequestBody @Valid EventLocationUpdateRequestDto locationFromUpdateRequest
     ) {
         log.info("Put request for updating location: {}", locationFromUpdateRequest);
-        var updatedLocation = locationService
-                .updateLocation(id, converter.fromUpdateDtoToDomain(locationFromUpdateRequest));
-        return converter.toDto(updatedLocation);
+        var updatedLocation = locationService.updateLocation(
+                id,
+                mapper.fromUpdateDto(locationFromUpdateRequest)
+        );
+        return mapper.toDto(updatedLocation);
     }
 
     @DeleteMapping("/{id}")

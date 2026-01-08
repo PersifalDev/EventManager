@@ -5,16 +5,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.haritonenko.commonlibs.error.exceptions.user_exception.exception.UserAlreadyRegisteredException;
-import ru.haritonenko.commonlibs.error.exceptions.user_exception.exception.UserNotFoundException;
-import ru.haritonenko.eventmanager.user.domain.converter.UserEntityConverter;
-import ru.haritonenko.eventmanager.user.domain.User;
+import ru.haritonenko.eventmanager.user.domain.exception.UserAlreadyRegisteredException;
+import ru.haritonenko.eventmanager.user.domain.exception.UserNotFoundException;
 import ru.haritonenko.eventmanager.user.api.dto.registration.UserRegistration;
-import ru.haritonenko.eventmanager.user.domain.db.entity.UserEntity;
+import ru.haritonenko.eventmanager.user.domain.User;
 import ru.haritonenko.eventmanager.user.domain.db.repository.UserRepository;
-import ru.haritonenko.eventmanager.user.domain.role.UserRole;
-
-import java.util.ArrayList;
+import ru.haritonenko.eventmanager.user.domain.mapper.UserEntityMapper;
 
 @Service
 @Slf4j
@@ -22,7 +18,7 @@ import java.util.ArrayList;
 public class UserService {
 
     private final UserRepository userRepository;
-    private final UserEntityConverter converter;
+    private final UserEntityMapper mapper;
     private final PasswordEncoder passwordEncoder;
 
     @Transactional(readOnly = true)
@@ -35,7 +31,7 @@ public class UserService {
                             "No found user by id = %s".formatted(id));
                 });
         log.info("User was successfully found by id: {}", id);
-        return converter.toDomain(foundUser);
+        return mapper.toDomain(foundUser);
     }
 
     @Transactional
@@ -46,18 +42,10 @@ public class UserService {
             throw new UserAlreadyRegisteredException("This user has already registered");
         }
         var hashedPass = passwordEncoder.encode(userFromRegistration.password());
-        var userToSave = new UserEntity(
-                null,
-                userFromRegistration.login(),
-                hashedPass,
-                userFromRegistration.age(),
-                UserRole.USER,
-                new ArrayList<>(),
-                new ArrayList<>()
-        );
+        var userToSave = mapper.toEntity(userFromRegistration, hashedPass);
         var savedUserEntity = userRepository.save(userToSave);
         log.info("User has successfully registered");
-        return converter.toDomain(savedUserEntity);
+        return mapper.toDomain(savedUserEntity);
     }
 
     public User findByLogin(String login) {
@@ -68,6 +56,6 @@ public class UserService {
                     return new UserNotFoundException("User not found");
                 });
         log.info("User was successfully found by login: {}", login);
-        return converter.toDomain(foundUser);
+        return mapper.toDomain(foundUser);
     }
 }

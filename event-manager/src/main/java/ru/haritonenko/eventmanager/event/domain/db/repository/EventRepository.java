@@ -10,7 +10,7 @@ import ru.haritonenko.eventmanager.event.domain.status.EventStatus;
 import ru.haritonenko.eventmanager.event.domain.db.entity.EventEntity;
 
 import org.springframework.data.domain.Pageable;
-import ru.haritonenko.eventmanager.event.registration.status.EventRegistrationStatus;
+import ru.haritonenko.eventmanager.event.registration.domain.status.EventRegistrationStatus;
 
 import java.math.BigDecimal;
 import java.util.Collection;

@@ -7,7 +7,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.*;
 import ru.haritonenko.eventmanager.event.domain.db.entity.EventEntity;
-import ru.haritonenko.eventmanager.event.registration.db.entity.EventRegistrationEntity;
+import ru.haritonenko.eventmanager.event.registration.domain.db.entity.EventRegistrationEntity;
 import ru.haritonenko.eventmanager.user.domain.role.UserRole;
 
 import java.util.ArrayList;
