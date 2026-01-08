@@ -20,9 +20,9 @@ public interface EventLocationRepository extends JpaRepository<EventLocationEnti
                 WHERE (:name IS NULL OR l.name = :name)
                 AND (:address IS NULL OR l.address = :address)
             """)
-    List<EventLocationEntity> searchBooks(
-            String name,
-            String address,
+    List<EventLocationEntity> searchLocations(
+            @Param("name") String name,
+            @Param("address") String address,
             Pageable pageable
     );
 

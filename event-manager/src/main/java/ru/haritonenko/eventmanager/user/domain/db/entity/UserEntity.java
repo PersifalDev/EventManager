@@ -13,6 +13,7 @@ import ru.haritonenko.eventmanager.user.domain.role.UserRole;
 import java.util.ArrayList;
 import java.util.List;
 
+@Builder
 @Getter
 @Setter
 @ToString(exclude = {"password", "ownEvents", "registrations"})
@@ -30,13 +31,13 @@ public class UserEntity {
 
     @NotBlank(message = "User login can not be blank")
     @Size(min = 4, message = "Min login size is 4")
-    @Column(unique = true, nullable = false)
+    @Column(name = "login", unique = true, nullable = false)
     @EqualsAndHashCode.Include
     private String login;
 
     @NotBlank(message = "User password can not be blank")
     @Size(min = 4, message = "Min password size is 4")
-    @Column(length = 100, nullable = false)
+    @Column(name = "password", length = 100, nullable = false)
     @EqualsAndHashCode.Include
     private String password;
 

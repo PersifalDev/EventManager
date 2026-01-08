@@ -3,7 +3,9 @@ package ru.haritonenko.eventmanager.user.api.dto.registration;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+import lombok.Builder;
 
+@Builder
 public record UserRegistration(
         @NotBlank(message = "User login can't be blank")
         @Size(min = 4, max = 50, message = "Min login size is 4, max is 50")

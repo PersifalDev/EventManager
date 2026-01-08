@@ -5,7 +5,6 @@
 
     <modelVersion>4.0.0</modelVersion>
 
-    <!-- Делаем root pom и агрегатором, и parent'ом -->
     <groupId>ru.haritonenko</groupId>
     <artifactId>EventManager</artifactId>
     <version>0.0.1-SNAPSHOT</version>
@@ -22,12 +21,11 @@
 
     <properties>
         <java.version>21</java.version>
-        <spring-boot.version>4.0.1</spring-boot.version>
-        <springdoc.version>3.0.0</springdoc.version>
+        <spring-boot.version>3.4.7</spring-boot.version>
+        <springdoc.version>2.8.5</springdoc.version>
         <jjwt.version>0.13.0</jjwt.version>
     </properties>
 
-    <!-- Чтобы модули могли не иметь spring-boot-parent напрямую -->
     <dependencyManagement>
         <dependencies>
             <dependency>
@@ -47,6 +45,14 @@
                     <groupId>org.springframework.boot</groupId>
                     <artifactId>spring-boot-maven-plugin</artifactId>
                     <version>${spring-boot.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <version>3.13.0</version>
+                    <configuration>
+                        <release>${java.version}</release>
+                    </configuration>
                 </plugin>
             </plugins>
         </pluginManagement>

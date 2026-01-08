@@ -5,12 +5,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.haritonenko.commonlibs.error.exceptions.user_exception.exception.UserAlreadyRegisteredException;
+import ru.haritonenko.commonlibs.error.exceptions.user_exception.exception.UserNotFoundException;
 import ru.haritonenko.eventmanager.user.domain.converter.UserEntityConverter;
 import ru.haritonenko.eventmanager.user.domain.User;
 import ru.haritonenko.eventmanager.user.api.dto.registration.UserRegistration;
 import ru.haritonenko.eventmanager.user.domain.db.entity.UserEntity;
-import ru.haritonenko.eventmanager.user.domain.exception.UserAlreadyRegisteredException;
-import ru.haritonenko.eventmanager.user.domain.exception.UserNotFoundException;
 import ru.haritonenko.eventmanager.user.domain.db.repository.UserRepository;
 import ru.haritonenko.eventmanager.user.domain.role.UserRole;
 

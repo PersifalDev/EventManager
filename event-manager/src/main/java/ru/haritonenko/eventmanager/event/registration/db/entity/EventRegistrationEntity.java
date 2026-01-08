@@ -7,6 +7,7 @@ import ru.haritonenko.eventmanager.event.domain.db.entity.EventEntity;
 import ru.haritonenko.eventmanager.event.registration.status.EventRegistrationStatus;
 import ru.haritonenko.eventmanager.user.domain.db.entity.UserEntity;
 
+@Builder
 @Getter
 @Setter
 @ToString(exclude = {"user", "event"})

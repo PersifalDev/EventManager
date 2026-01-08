@@ -7,7 +7,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Component;
-import ru.haritonenko.eventmanager.user.domain.exception.UserNotFoundException;
+import ru.haritonenko.commonlibs.error.exceptions.user_exception.exception.UserNotFoundException;
 import ru.haritonenko.eventmanager.user.domain.db.repository.UserRepository;
 
 @Slf4j

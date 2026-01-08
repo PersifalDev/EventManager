@@ -12,9 +12,8 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
-import ru.haritonenko.eventmanager.user.security.jwt.JwtTokenManager;
-import ru.haritonenko.eventmanager.user.domain.User;
-import ru.haritonenko.eventmanager.user.domain.service.UserService;
+import ru.haritonenko.commonlibs.securirty.user.AuthUser;
+import ru.haritonenko.eventmanager.user.security.jwt.manager.JwtTokenManager;
 
 import java.io.IOException;
 import java.util.List;
@@ -27,7 +26,6 @@ import static java.util.Objects.isNull;
 public class JwtTokenFilter extends OncePerRequestFilter {
 
     private final JwtTokenManager jwtTokenManager;
-    private final UserService userService;
 
     @Override
     protected void doFilterInternal(
@@ -35,33 +33,36 @@ public class JwtTokenFilter extends OncePerRequestFilter {
             HttpServletResponse response,
             FilterChain filterChain
     ) throws ServletException, IOException {
+
         String authorizationHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
         if (isNull(authorizationHeader) || !authorizationHeader.startsWith("Bearer ")) {
-            log.warn("Invalid header");
             filterChain.doFilter(request, response);
             return;
         }
-        var jwtTokenWithoutWordBearer = authorizationHeader.substring(7);
-        String loginFromToken;
+
+        String jwt = authorizationHeader.substring(7);
+
+        AuthUser user;
         try {
-            log.info("Getting login from token");
-            loginFromToken = jwtTokenManager.getLoginFromToken(jwtTokenWithoutWordBearer);
+            user = jwtTokenManager.getAuthUserFromToken(jwt);
         } catch (Exception ex) {
             log.warn("Error while reading jwt", ex);
             filterChain.doFilter(request, response);
             return;
         }
-        log.info("Searching for user by login");
-        User user = userService.findByLogin(loginFromToken);
-        log.info("Getting token for user");
+
+        if (isNull(user) || isNull(user.id()) || isNull(user.role())) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         UsernamePasswordAuthenticationToken token = new UsernamePasswordAuthenticationToken(
                 user,
                 null,
-                List.of(new SimpleGrantedAuthority(user.role().toString()))
+                List.of(new SimpleGrantedAuthority(user.role()))
         );
-        SecurityContextHolder.getContext()
-                .setAuthentication(token);
+
+        SecurityContextHolder.getContext().setAuthentication(token);
         filterChain.doFilter(request, response);
-        log.info("Token was set for user");
     }
 }

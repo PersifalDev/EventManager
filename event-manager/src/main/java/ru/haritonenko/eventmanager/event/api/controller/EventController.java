@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import ru.haritonenko.commonlibs.securirty.user.AuthUser;
 import ru.haritonenko.eventmanager.event.domain.converter.EventDtoConverter;
 import ru.haritonenko.eventmanager.event.api.dto.EventCreateRequestDto;
 import ru.haritonenko.eventmanager.event.api.dto.EventDto;
@@ -14,7 +15,6 @@ import ru.haritonenko.eventmanager.event.api.dto.filter.EventPageFilter;
 import ru.haritonenko.eventmanager.event.api.dto.filter.EventSearchRequestDto;
 import ru.haritonenko.eventmanager.event.domain.service.EventService;
 import ru.haritonenko.eventmanager.user.security.service.AuthenticationService;
-import ru.haritonenko.eventmanager.user.domain.User;
 
 import java.util.List;
 
@@ -38,7 +38,7 @@ public class EventController {
     }
 
     @GetMapping("/my")
-    public List<EventDto> getUserCreatedEvents(
+    public List<EventDto> getEventsCreatedByUser(
             @Valid EventPageFilter pageFilter
     ) {
         log.info("Get request for getting events created by user");
@@ -49,7 +49,7 @@ public class EventController {
     }
 
     @GetMapping("/registrations/my")
-    public List<EventDto> getUserBookedEvents(
+    public List<EventDto> getEventsBookedByUser(
             @Valid EventPageFilter pageFilter
     ) {
         log.info("Get request for getting events booked by user");
@@ -140,7 +140,7 @@ public class EventController {
         );
     }
 
-    private User getAuthenticatedUser() {
+    private AuthUser getAuthenticatedUser() {
         return authenticationService.getCurrentAuthenticatedUser();
     }
 }

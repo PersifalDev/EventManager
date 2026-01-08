@@ -6,32 +6,35 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.haritonenko.commonlibs.dto.changes.EventFieldChange;
+import ru.haritonenko.commonlibs.dto.notification.EventChangeKafkaMessage;
+import ru.haritonenko.commonlibs.error.exceptions.event_exception.exception.EventCountPlacesException;
+import ru.haritonenko.commonlibs.error.exceptions.event_exception.exception.EventInvalidStatusException;
+import ru.haritonenko.commonlibs.error.exceptions.event_exception.exception.EventNotFoundException;
+import ru.haritonenko.commonlibs.error.exceptions.location_exception.exception.LocationNotFoundException;
+import ru.haritonenko.commonlibs.error.exceptions.registration_exception.exception.EventRegistrationNotFoundException;
+import ru.haritonenko.commonlibs.error.exceptions.registration_exception.exception.InvalidEventRegistrationStatusException;
+import ru.haritonenko.commonlibs.error.exceptions.user_exception.exception.UserAlreadyRegisteredOnEventException;
+import ru.haritonenko.commonlibs.error.exceptions.user_exception.exception.UserNotFoundException;
+import ru.haritonenko.commonlibs.securirty.user.AuthUser;
 import ru.haritonenko.eventmanager.event.domain.Event;
 import ru.haritonenko.eventmanager.event.domain.converter.EventEntityConverter;
 import ru.haritonenko.eventmanager.event.api.dto.EventCreateRequestDto;
 import ru.haritonenko.eventmanager.event.api.dto.EventUpdateRequestDto;
 import ru.haritonenko.eventmanager.event.api.dto.filter.EventPageFilter;
 import ru.haritonenko.eventmanager.event.api.dto.filter.EventSearchRequestDto;
-import ru.haritonenko.eventmanager.event.domain.exception.EventCountPlacesException;
-import ru.haritonenko.eventmanager.event.domain.exception.EventInvalidStatusException;
-import ru.haritonenko.eventmanager.event.domain.exception.EventNotFoundException;
 import ru.haritonenko.eventmanager.event.registration.db.repository.EventRegistrationRepository;
 import ru.haritonenko.eventmanager.event.registration.db.entity.EventRegistrationEntity;
-import ru.haritonenko.eventmanager.event.registration.exception.EventRegistrationNotFoundException;
-import ru.haritonenko.eventmanager.event.registration.exception.InvalidEventRegistrationStatusException;
 import ru.haritonenko.eventmanager.event.registration.status.EventRegistrationStatus;
-import ru.haritonenko.eventmanager.location.domain.exception.LocationNotFoundException;
+import ru.haritonenko.eventmanager.kafka.producer.sender.KafkaEventSender;
 import ru.haritonenko.eventmanager.location.domain.db.entity.EventLocationEntity;
-import ru.haritonenko.eventmanager.user.domain.exception.UserAlreadyRegisteredOnEventException;
 import ru.haritonenko.eventmanager.event.domain.status.EventStatus;
 import ru.haritonenko.eventmanager.event.domain.db.entity.EventEntity;
 import ru.haritonenko.eventmanager.event.domain.db.repository.EventRepository;
 import ru.haritonenko.eventmanager.location.domain.db.repository.EventLocationRepository;
-import ru.haritonenko.eventmanager.user.domain.exception.UserNotFoundException;
 import ru.haritonenko.eventmanager.user.domain.role.UserRole;
 import ru.haritonenko.eventmanager.user.domain.db.entity.UserEntity;
 import ru.haritonenko.eventmanager.user.domain.db.repository.UserRepository;
-import ru.haritonenko.eventmanager.user.domain.User;
 import org.springframework.data.domain.Pageable;
 
 import java.math.BigDecimal;
@@ -49,17 +52,18 @@ import static java.util.Objects.nonNull;
 @RequiredArgsConstructor
 public class EventService {
 
-    @Value("${app.location.default-page-size}")
-    private int defaultPageSize;
-
-    @Value("${app.location.default-page-number}")
-    private int defaultPageNumber;
-
     private final EventRepository eventRepository;
     private final UserRepository userRepository;
     private final EventLocationRepository eventLocationRepository;
     private final EventRegistrationRepository eventRegistrationRepository;
     private final EventEntityConverter converter;
+    private final KafkaEventSender kafkaEventSender;
+
+    @Value("${app.location.default-page-size}")
+    private int defaultPageSize;
+
+    @Value("${app.location.default-page-number}")
+    private int defaultPageNumber;
 
     @Transactional(readOnly = true)
     public Event getEventById(Integer id) {
@@ -111,6 +115,7 @@ public class EventService {
         var event = getEventByIdOrThrow(eventId);
 
         checkRoleIsAdminAndEventOwnerIsUserToUpdateOrDeleteOrThrow(user, event);
+        checkEventStatusIsWaitStartOrThrow(event);
 
         var newLocation = getEventLocationByIdOrThrow(eventToUpdate.locationId());
         var oldLocation = event.getLocation();
@@ -118,12 +123,13 @@ public class EventService {
         checkLocationCapacityIsMoreOrEqualsEventPlacesOrThrow(newLocation, eventToUpdate.maxPlaces());
         checkCountOfOccupiedPlacesLessThanMaxOrThrow(eventToUpdate, event);
 
+        var eventBeforeChangesSnapshot = getEventOldVersionSnapshot(event);
+
         if (!oldLocation.getId().equals(newLocation.getId())) {
             oldLocation.getEvents().remove(event);
             event.setLocation(newLocation);
             newLocation.getEvents().add(event);
         }
-
         event.setName(eventToUpdate.name());
         event.setMaxPlaces(eventToUpdate.maxPlaces());
         event.setDate(eventToUpdate.date());
@@ -131,11 +137,23 @@ public class EventService {
         event.setDuration(eventToUpdate.duration());
 
         log.info("Event with id: {} was successfully updated", eventId);
+
+        var message = buildChangeNotification(
+                eventBeforeChangesSnapshot,
+                event,
+                ownerId,
+                getUsersSubscribedToEventList(event)
+        );
+
+        if (nonNull(message)) {
+            kafkaEventSender.sendKafkaEvent(message);
+        }
+
         return converter.toDomain(event);
     }
 
     public List<Event> findEventsCreatedByUser(
-            User userFromRequest,
+            AuthUser userFromRequest,
             EventPageFilter pageFilter
     ) {
         log.info("Searching all user's created events");
@@ -149,7 +167,7 @@ public class EventService {
     }
 
     public List<Event> findBookedEventByUserId(
-            User user,
+            AuthUser user,
             EventPageFilter pageFilter
     ) {
         log.info("Searching all user's booked events");
@@ -241,12 +259,28 @@ public class EventService {
         log.info("Checking conditions before deleting event");
         checkRoleIsAdminAndEventOwnerIsUserToUpdateOrDeleteOrThrow(user, event);
         checkEventStatusIsWaitStartOrThrow(event);
+
+        var eventBeforeChangesSnapshot = getEventOldVersionSnapshot(event);
+
         event.setStatus(EventStatus.CANCELLED);
+
         int updatedStatus = eventRegistrationRepository.updateStatusByEventId(
                 eventId,
                 EventRegistrationStatus.CANCELLED,
                 EventRegistrationStatus.ACTIVE
         );
+
+        var message = buildChangeNotification(
+                eventBeforeChangesSnapshot,
+                event,
+                ownerId,
+                getUsersSubscribedToEventList(event)
+        );
+        if (nonNull(message)) {
+            kafkaEventSender.sendKafkaEvent(message);
+        }
+
+        kafkaEventSender.sendKafkaEvent(message);
         int updatedPlaces = eventRepository.resetOccupiedPlaces(eventId);
         checkCorrectUpdateOrThrow(updatedStatus, "Error while updating event status");
         checkCorrectUpdateOrThrow(updatedPlaces, "Error while updating event occupied places");
@@ -446,6 +480,96 @@ public class EventService {
             log.warn("Error while updating event place");
             throw new IllegalStateException(message);
         }
+    }
+
+    private EventChangeKafkaMessage buildChangeNotification(
+            EventEntity beforeChanges,
+            EventEntity afterChanges,
+            Integer changedById,
+            List<Integer> users
+    ) {
+        var name = !Objects.equals(beforeChanges.getName(), afterChanges.getName())
+                ? new EventFieldChange<>(beforeChanges.getName(), afterChanges.getName())
+                : null;
+        var maxPlaces = !Objects.equals(beforeChanges.getMaxPlaces(), afterChanges.getMaxPlaces())
+                ? new EventFieldChange<>(beforeChanges.getMaxPlaces(), afterChanges.getMaxPlaces())
+                : null;
+        var time = !Objects.equals(beforeChanges.getDate(), afterChanges.getDate())
+                ? new EventFieldChange<>(beforeChanges.getDate(), afterChanges.getDate())
+                : null;
+        var cost = !Objects.equals(beforeChanges.getCost(), afterChanges.getCost())
+                ? new EventFieldChange<Number>(beforeChanges.getCost(), afterChanges.getCost())
+                : null;
+        var duration = !Objects.equals(beforeChanges.getDuration(), afterChanges.getDuration())
+                ? new EventFieldChange<>(beforeChanges.getDuration(), afterChanges.getDuration())
+                : null;
+        var status = !Objects.equals(beforeChanges.getStatus(), afterChanges.getStatus())
+                ? new EventFieldChange<>(beforeChanges.getStatus().toString(), afterChanges.getStatus().toString())
+                : null;
+
+        if (isNull(beforeChanges.getLocation()) || isNull(afterChanges.getLocation())) {
+            throw new LocationNotFoundException("Event location must not be null");
+        }
+
+        Integer beforeLocationId = beforeChanges.getLocation().getId();
+        Integer afterLocationId = afterChanges.getLocation().getId();
+
+        var locationId = !Objects.equals(beforeLocationId, afterLocationId)
+                ? new EventFieldChange<>(beforeLocationId, afterLocationId)
+                : null;
+        boolean hasAnyChange = nonNull(name) || nonNull(maxPlaces) ||
+                nonNull(time) || nonNull(cost) || nonNull(duration) ||
+                nonNull(locationId) || nonNull(status);
+
+        if (!hasAnyChange) {
+            return null;
+        }
+
+        return EventChangeKafkaMessage.builder()
+                .users(users)
+                .ownerId(afterChanges.getOwner().getId())
+                .changedById(changedById)
+                .eventId(afterChanges.getId())
+                .name(name)
+                .maxPlaces(maxPlaces)
+                .time(time)
+                .cost(cost)
+                .duration(duration)
+                .status(status)
+                .locationId(locationId)
+                .build();
+    }
+
+    private List<Integer> getUsersSubscribedToEventList(
+            EventEntity event
+    ) {
+        return event.getRegistrations().stream()
+                .filter(Objects::nonNull)
+                .filter(registration->registration.getStatus() == EventRegistrationStatus.ACTIVE)
+                .map(EventRegistrationEntity::getUser)
+                .filter(Objects::nonNull)
+                .map(UserEntity::getId)
+                .filter(Objects::nonNull)
+                .distinct()
+                .collect(Collectors.toList());
+    }
+
+    private EventEntity getEventOldVersionSnapshot(
+            EventEntity event
+    ) {
+        return EventEntity.builder()
+                .id(event.getId())
+                .name(event.getName())
+                .owner(event.getOwner())
+                .location(event.getLocation())
+                .registrations(event.getRegistrations())
+                .maxPlaces(event.getMaxPlaces())
+                .occupiedPlaces(event.getOccupiedPlaces())
+                .date(event.getDate())
+                .cost(event.getCost())
+                .duration(event.getDuration())
+                .status(event.getStatus())
+                .build();
     }
 }
 

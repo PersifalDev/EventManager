@@ -9,7 +9,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import ru.haritonenko.eventmanager.user.security.service.AuthenticationService;
-import ru.haritonenko.eventmanager.user.security.jwt.JwtResponse;
+import ru.haritonenko.eventmanager.user.security.jwt.response.JwtResponse;
 import ru.haritonenko.eventmanager.user.domain.converter.UserDtoConverter;
 import ru.haritonenko.eventmanager.user.api.dto.UserDto;
 import ru.haritonenko.eventmanager.user.api.dto.authorization.UserCredentials;

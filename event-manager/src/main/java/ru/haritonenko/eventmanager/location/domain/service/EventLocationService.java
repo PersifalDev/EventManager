@@ -5,11 +5,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.haritonenko.commonlibs.error.exceptions.location_exception.exception.LocationCountPlacesException;
+import ru.haritonenko.commonlibs.error.exceptions.location_exception.exception.LocationNotFoundException;
 import ru.haritonenko.eventmanager.location.domain.converter.EventLocationEntityConverter;
-import ru.haritonenko.eventmanager.location.domain.exception.LocationCountPlacesException;
 import ru.haritonenko.eventmanager.location.domain.EventLocation;
 import ru.haritonenko.eventmanager.location.domain.db.entity.EventLocationEntity;
-import ru.haritonenko.eventmanager.location.domain.exception.LocationNotFoundException;
 import ru.haritonenko.eventmanager.location.api.dto.filter.EventLocationSearchFilter;
 import ru.haritonenko.eventmanager.location.domain.db.repository.EventLocationRepository;
 
@@ -47,7 +47,7 @@ public class EventLocationService {
         Pageable pageable = Pageable
                 .ofSize(pageSize)
                 .withPage(pageNumber);
-        return locationRepository.searchBooks(
+        return locationRepository.searchLocations(
                         locationFilter.name(),
                         locationFilter.address(),
                         pageable

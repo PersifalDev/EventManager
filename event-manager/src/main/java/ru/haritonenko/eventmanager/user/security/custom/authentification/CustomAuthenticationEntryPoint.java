@@ -9,8 +9,8 @@ import org.springframework.http.MediaType;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.stereotype.Component;
-import ru.haritonenko.eventmanager.error.errorDto.ErrorMessageResponse;
-import tools.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import ru.haritonenko.commonlibs.error.errorDto.ErrorMessageResponse;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
