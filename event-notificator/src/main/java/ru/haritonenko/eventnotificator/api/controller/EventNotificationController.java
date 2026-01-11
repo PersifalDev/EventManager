@@ -3,6 +3,7 @@ package ru.haritonenko.eventnotificator.api.controller;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import ru.haritonenko.commonlibs.securirty.user.AuthUser;
 import ru.haritonenko.eventnotificator.api.dto.EventNotificationDto;
@@ -36,6 +37,7 @@ public class EventNotificationController {
     }
 
     @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
     public void markNotificationsRead(@RequestBody MarkNotificationsReadRequest request) {
         log.info("Post request for marking unread notifications for user");
         eventNotificationService.markNotificationsAsRead(
