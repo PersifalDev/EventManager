@@ -3,20 +3,15 @@ package ru.haritonenko.eventmanager.event.domain.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.haritonenko.commonlibs.dto.changes.EventFieldChange;
 import ru.haritonenko.commonlibs.dto.notification.EventChangeKafkaMessage;
-import ru.haritonenko.eventmanager.event.exception.EventCountPlacesUpdateException;
-import ru.haritonenko.eventmanager.event.exception.NotValidEventStatusException;
-import ru.haritonenko.eventmanager.event.exception.EventNotFoundException;
-import ru.haritonenko.eventmanager.location.domain.exception.LocationNotFoundException;
-import ru.haritonenko.eventmanager.event.registration.domain.exception.EventRegistrationNotFoundException;
-import ru.haritonenko.eventmanager.event.registration.domain.exception.InvalidEventRegistrationStatusException;
-import ru.haritonenko.eventmanager.user.domain.exception.UserAlreadyRegisteredOnEventException;
-import ru.haritonenko.eventmanager.user.domain.exception.UserNotFoundException;
 import ru.haritonenko.commonlibs.securirty.user.AuthUser;
 import ru.haritonenko.eventmanager.event.api.dto.EventCreateRequestDto;
 import ru.haritonenko.eventmanager.event.api.dto.EventUpdateRequestDto;
@@ -29,14 +24,22 @@ import ru.haritonenko.eventmanager.event.domain.mapper.EventCreateMapper;
 import ru.haritonenko.eventmanager.event.domain.mapper.EventEntityMapper;
 import ru.haritonenko.eventmanager.event.domain.mapper.EventUpdateMapper;
 import ru.haritonenko.eventmanager.event.domain.status.EventStatus;
+import ru.haritonenko.eventmanager.event.exception.EventCountPlacesUpdateException;
+import ru.haritonenko.eventmanager.event.exception.EventNotFoundException;
+import ru.haritonenko.eventmanager.event.exception.NotValidEventStatusException;
 import ru.haritonenko.eventmanager.event.registration.domain.db.entity.EventRegistrationEntity;
 import ru.haritonenko.eventmanager.event.registration.domain.db.repository.EventRegistrationRepository;
+import ru.haritonenko.eventmanager.event.registration.domain.exception.EventRegistrationNotFoundException;
+import ru.haritonenko.eventmanager.event.registration.domain.exception.InvalidEventRegistrationStatusException;
 import ru.haritonenko.eventmanager.event.registration.domain.status.EventRegistrationStatus;
 import ru.haritonenko.eventmanager.kafka.producer.sender.KafkaEventSender;
 import ru.haritonenko.eventmanager.location.domain.db.entity.EventLocationEntity;
 import ru.haritonenko.eventmanager.location.domain.db.repository.EventLocationRepository;
+import ru.haritonenko.eventmanager.location.domain.exception.LocationNotFoundException;
 import ru.haritonenko.eventmanager.user.domain.db.entity.UserEntity;
 import ru.haritonenko.eventmanager.user.domain.db.repository.UserRepository;
+import ru.haritonenko.eventmanager.user.domain.exception.UserAlreadyRegisteredOnEventException;
+import ru.haritonenko.eventmanager.user.domain.exception.UserNotFoundException;
 import ru.haritonenko.eventmanager.user.domain.role.UserRole;
 
 import java.math.BigDecimal;
@@ -68,6 +71,7 @@ public class EventService {
     @Value("${app.location.default-page-number}")
     private int defaultPageNumber;
 
+    @Cacheable(cacheNames = "events", key = "#id")
     @Transactional(readOnly = true)
     public Event getEventById(Integer id) {
         log.info("Getting event by id: {}", id);
@@ -97,6 +101,11 @@ public class EventService {
         return eventEntityMapper.toDomain(savedEventEntity);
     }
 
+    @Caching(evict = {
+            @CacheEvict(cacheNames = "events", key = "#eventId"),
+            @CacheEvict(cacheNames = "user-created-events", allEntries = true),
+            @CacheEvict(cacheNames = "user-booked-events", allEntries = true)
+    })
     @Transactional
     public Event updateEvent(
             Integer ownerId,
@@ -124,8 +133,10 @@ public class EventService {
             event.setLocation(newLocation);
             newLocation.getEvents().add(event);
         }
+
         eventUpdateMapper.updateEntity(event, eventToUpdate);
         log.info("Event with id: {} was successfully updated", eventId);
+
         var message = buildChangeNotification(
                 eventBeforeChangesSnapshot,
                 event,
@@ -138,6 +149,11 @@ public class EventService {
         return eventEntityMapper.toDomain(event);
     }
 
+    @Cacheable(
+            cacheNames = "user-created-events",
+            key = "#userFromRequest.id() + ':' + (#pageFilter.pageNumber()?:0) + ':' + (#pageFilter.pageSize()?:0)"
+    )
+    @Transactional(readOnly = true)
     public List<Event> findEventsCreatedByUser(
             AuthUser userFromRequest,
             EventPageFilter pageFilter
@@ -152,6 +168,11 @@ public class EventService {
         return getSortedEventListByEventId(createdEvents);
     }
 
+    @Cacheable(
+            cacheNames = "user-booked-events",
+            key = "#user.id() + ':' + (#pageFilter.pageNumber()?:0) + ':' + (#pageFilter.pageSize()?:0)"
+    )
+    @Transactional(readOnly = true)
     public List<Event> findBookedEventByUserId(
             AuthUser user,
             EventPageFilter pageFilter
@@ -165,6 +186,7 @@ public class EventService {
         return getSortedEventListByEventId(bookedEvents);
     }
 
+    @Transactional(readOnly = true)
     public List<Event> searchEventWithFilter(
             EventSearchRequestDto eventFilter,
             EventPageFilter pageFilter
@@ -202,6 +224,10 @@ public class EventService {
         return getSortedEventListByEventId(foundEventsWithFilter);
     }
 
+    @Caching(evict = {
+            @CacheEvict(cacheNames = "events", key = "#eventId"),
+            @CacheEvict(cacheNames = "user-booked-events", allEntries = true)
+    })
     @Transactional
     public Event registerOnEvent(Integer userId, Integer eventId) {
         log.info("Registration user on event");
@@ -239,6 +265,11 @@ public class EventService {
         return eventEntityMapper.toDomain(updatedEvent);
     }
 
+    @Caching(evict = {
+            @CacheEvict(cacheNames = "events", key = "#eventId"),
+            @CacheEvict(cacheNames = "user-created-events", allEntries = true),
+            @CacheEvict(cacheNames = "user-booked-events", allEntries = true)
+    })
     @Transactional
     public void deleteEventById(Integer ownerId, Integer eventId) {
         log.info("Deleting event by id: {}", eventId);
@@ -276,6 +307,10 @@ public class EventService {
         checkCorrectUpdateOrThrow(updatedPlaces, "Error while updating event occupied places");
     }
 
+    @Caching(evict = {
+            @CacheEvict(cacheNames = "events", key = "#eventId"),
+            @CacheEvict(cacheNames = "user-booked-events", allEntries = true)
+    })
     @Transactional
     public void cancelEventRegistrationRequestById(Integer userId, Integer eventId) {
         log.info("Cancelling event registration by id: {}", eventId);
@@ -367,7 +402,7 @@ public class EventService {
                 .collect(Collectors.toList());
     }
 
-    public void checkEventStatusIsWaitStartOrThrow(EventEntity event) {
+    private void checkEventStatusIsWaitStartOrThrow(EventEntity event) {
         if (event.getStatus() != EventStatus.WAIT_START) {
             log.warn("Error while checking event status to delete event or cancel registration");
             throw new NotValidEventStatusException("Event status is not WAIT_START for that action");

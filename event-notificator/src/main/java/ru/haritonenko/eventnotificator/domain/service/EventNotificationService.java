@@ -3,6 +3,8 @@ package ru.haritonenko.eventnotificator.domain.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,7 +18,10 @@ import ru.haritonenko.eventnotificator.domain.db.repository.EventNotificationRep
 import ru.haritonenko.eventnotificator.domain.mapper.EventNotificationEntityMapper;
 
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import static java.util.Objects.isNull;
@@ -30,12 +35,17 @@ public class EventNotificationService {
     private final EventNotificationRepository notificationRepository;
     private final EventNotificationEntityMapper mapper;
 
-    @Value("${app.location.default-page-size:5}")
+    @Value("${app.location.default-page-size}")
     private int defaultPageSize;
 
-    @Value("${app.location.default-page-number:0}")
+    @Value("${app.location.default-page-number}")
     private int defaultPageNumber;
 
+    @Cacheable(
+            cacheNames = "unread-notifications",
+            key = "#user.id() + ':' + (#pageFilter?.pageNumber() ?: 0) + ':' + (#pageFilter?.pageSize() ?: 5)"
+    )
+    @Transactional(readOnly = true)
     public List<EventNotification> findUnreadNotificationsForUser(
             AuthUser user,
             EventNotificationPageFilter pageFilter
@@ -44,6 +54,10 @@ public class EventNotificationService {
         if (isNull(user)) {
             throw new IllegalStateException("Authentication not present");
         }
+        if (isNull(pageFilter)) {
+            pageFilter = new EventNotificationPageFilter(null, null);
+        }
+
         return notificationRepository.findAllUnredNotificationsByUserId(user.id(), getPageable(pageFilter))
                 .stream()
                 .map(mapper::toDomain)
@@ -51,6 +65,7 @@ public class EventNotificationService {
                 .collect(Collectors.toList());
     }
 
+    @CacheEvict(cacheNames = "unread-notifications", allEntries = true)
     @Transactional
     public void markNotificationsAsRead(AuthUser user, List<Integer> notificationIds) {
         if (isNull(user)) {
@@ -62,6 +77,7 @@ public class EventNotificationService {
         notificationRepository.markUserNotificationsAsRead(user.id(), notificationIds);
     }
 
+    @CacheEvict(cacheNames = "unread-notifications", allEntries = true)
     @Transactional
     public void saveNotificationsFromKafka(EventChangeKafkaMessage message) {
         if (isNull(message) || isNull(message.users()) || message.users().isEmpty()) {
@@ -70,7 +86,7 @@ public class EventNotificationService {
 
         String text = buildMessageText(message);
 
-        List<EventNotificationEntity> eventNotificationEntities = message.users().stream()
+        List<EventNotificationEntity> entities = message.users().stream()
                 .filter(Objects::nonNull)
                 .distinct()
                 .map(userId -> EventNotificationEntity.builder()
@@ -80,11 +96,10 @@ public class EventNotificationService {
                         .createdAt(LocalDateTime.now())
                         .read(false)
                         .message(text)
-                        .build()
-                )
+                        .build())
                 .toList();
 
-        notificationRepository.saveAll(eventNotificationEntities);
+        notificationRepository.saveAll(entities);
     }
 
     private String buildMessageText(EventChangeKafkaMessage message) {
@@ -115,10 +130,8 @@ public class EventNotificationService {
     }
 
     private Pageable getPageable(EventNotificationPageFilter pageFilter) {
-        int pageSize = Objects.nonNull(pageFilter.pageSize())
-                ? pageFilter.pageSize() : defaultPageSize;
-        int pageNumber = Objects.nonNull(pageFilter.pageNumber())
-                ? pageFilter.pageNumber() : defaultPageNumber;
+        int pageSize = Objects.nonNull(pageFilter.pageSize()) ? pageFilter.pageSize() : defaultPageSize;
+        int pageNumber = Objects.nonNull(pageFilter.pageNumber()) ? pageFilter.pageNumber() : defaultPageNumber;
         return Pageable.ofSize(pageSize).withPage(pageNumber);
     }
 }

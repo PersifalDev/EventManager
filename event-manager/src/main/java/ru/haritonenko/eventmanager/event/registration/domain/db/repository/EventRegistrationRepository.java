@@ -5,7 +5,6 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
-import org.springframework.transaction.annotation.Transactional;
 import ru.haritonenko.eventmanager.event.registration.domain.db.entity.EventRegistrationEntity;
 import ru.haritonenko.eventmanager.event.registration.domain.status.EventRegistrationStatus;
 
@@ -14,7 +13,6 @@ import java.util.Optional;
 @Repository
 public interface EventRegistrationRepository extends JpaRepository<EventRegistrationEntity, Integer> {
 
-    @Transactional(readOnly = true)
     Optional<EventRegistrationEntity> findByUserIdAndEventId(Integer userId, Integer eventId);
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)

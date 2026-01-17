@@ -3,6 +3,9 @@ package ru.haritonenko.eventmanager.location.domain.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,6 +37,7 @@ public class EventLocationService {
     @Value("${app.location.default-page-number}")
     private int defaultPageNumber;
 
+    @Transactional(readOnly = true)
     public List<EventLocation> getAllLocations(
             EventLocationSearchFilter locationFilter
     ) {
@@ -68,6 +72,7 @@ public class EventLocationService {
         return mapper.toDomain(savedLocationEntity);
     }
 
+    @Cacheable(cacheNames = "locations", key = "#id")
     @Transactional(readOnly = true)
     public EventLocation getLocationById(Integer id) {
         log.info("Getting location by id: {}", id);
@@ -81,6 +86,8 @@ public class EventLocationService {
         return mapper.toDomain(foundLocation);
     }
 
+    @CachePut(cacheNames = "locations", key = "#id")
+    @Transactional
     public EventLocation updateLocation(Integer id, EventLocation eventLocationToUpdate) {
         log.info("Updating location with id: {}", id);
         checkLocationIsExistedByIdOrThrow(id);
@@ -96,6 +103,7 @@ public class EventLocationService {
         return mapper.toDomain(locationRepository.findById(id).orElseThrow());
     }
 
+    @CacheEvict(cacheNames = "locations", key = "#id")
     @Transactional
     public void deleteLocation(Integer id) {
         log.info("Deleting location by id: {}", id);
@@ -125,7 +133,7 @@ public class EventLocationService {
                             "No found location by id = %s".formatted(id));
                 });
 
-        if (oldLocation.getCapacity() < eventLocationToUpdate.capacity()) {
+        if (oldLocation.getCapacity() > eventLocationToUpdate.capacity()) {
             log.warn("Error while changing location capacity ");
             throw new LocationCountPlacesException("You can't decrease location capacity, " +
                     "because places might be occupied by users");

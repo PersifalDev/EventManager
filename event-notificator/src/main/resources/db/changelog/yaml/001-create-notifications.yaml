@@ -1,0 +1,59 @@
+databaseChangeLog:
+  - changeSet:
+      id: 001-create-notifications
+      author: haritonenko
+      changes:
+        - createTable:
+            tableName: notifications
+            columns:
+              - column:
+                  name: id
+                  type: int
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+
+              - column:
+                  name: user_id
+                  type: int
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: event_id
+                  type: int
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: created_at
+                  type: timestamp
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: is_read
+                  type: boolean
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: message
+                  type: varchar(2000)
+                  constraints:
+                    nullable: false
+
+        - createIndex:
+            tableName: notifications
+            indexName: ix_notifications_user_id
+            columns:
+              - column:
+                  name: user_id
+
+        - createIndex:
+            tableName: notifications
+            indexName: ix_notifications_event_id
+            columns:
+              - column:
+                  name: event_id

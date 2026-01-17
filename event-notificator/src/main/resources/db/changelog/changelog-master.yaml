@@ -1,0 +1,9 @@
+databaseChangeLog:
+  - changeSet:
+      id: 001-create-notifications
+      author: haritonenko
+      changes:
+        - sqlFile:
+            path: db/changelog/sql/001-create-notifications.sql
+            splitStatements: true
+            stripComments: true
