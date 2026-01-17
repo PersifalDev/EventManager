@@ -6,7 +6,6 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
-import org.springframework.transaction.annotation.Transactional;
 import ru.haritonenko.eventmanager.location.domain.db.entity.EventLocationEntity;
 
 import java.util.List;
@@ -14,7 +13,6 @@ import java.util.List;
 @Repository
 public interface EventLocationRepository extends JpaRepository<EventLocationEntity, Integer> {
 
-    @Transactional(readOnly = true)
     @Query("""
                 SELECT l FROM EventLocationEntity l
                 WHERE (:name IS NULL OR l.name = :name)
@@ -26,7 +24,6 @@ public interface EventLocationRepository extends JpaRepository<EventLocationEnti
             Pageable pageable
     );
 
-    @Transactional
     @Modifying
     @Query("""
                 UPDATE EventLocationEntity l

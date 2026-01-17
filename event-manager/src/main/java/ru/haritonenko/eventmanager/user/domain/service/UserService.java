@@ -2,14 +2,17 @@ package ru.haritonenko.eventmanager.user.domain.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.haritonenko.eventmanager.user.domain.exception.UserAlreadyRegisteredException;
-import ru.haritonenko.eventmanager.user.domain.exception.UserNotFoundException;
 import ru.haritonenko.eventmanager.user.api.dto.registration.UserRegistration;
 import ru.haritonenko.eventmanager.user.domain.User;
 import ru.haritonenko.eventmanager.user.domain.db.repository.UserRepository;
+import ru.haritonenko.eventmanager.user.domain.exception.UserAlreadyRegisteredException;
+import ru.haritonenko.eventmanager.user.domain.exception.UserNotFoundException;
 import ru.haritonenko.eventmanager.user.domain.mapper.UserEntityMapper;
 
 @Service
@@ -21,19 +24,23 @@ public class UserService {
     private final UserEntityMapper mapper;
     private final PasswordEncoder passwordEncoder;
 
+    @Cacheable(cacheNames = "users", key = "'id:' + #id")
     @Transactional(readOnly = true)
     public User getUserById(Integer id) {
         log.info("Getting user by id: {}", id);
         var foundUser = userRepository.findById(id)
                 .orElseThrow(() -> {
                     log.warn("Error while getting user by id");
-                    return new UserNotFoundException(
-                            "No found user by id = %s".formatted(id));
+                    return new UserNotFoundException("No found user by id = %s".formatted(id));
                 });
         log.info("User was successfully found by id: {}", id);
         return mapper.toDomain(foundUser);
     }
 
+    @Caching(put = {
+            @CachePut(cacheNames = "users", key = "'id:' + #result.id()"),
+            @CachePut(cacheNames = "users", key = "'login:' + #result.login()")
+    })
     @Transactional
     public User register(UserRegistration userFromRegistration) {
         log.info("User registration started");
@@ -48,6 +55,8 @@ public class UserService {
         return mapper.toDomain(savedUserEntity);
     }
 
+    @Cacheable(cacheNames = "users", key = "'login:' + #login")
+    @Transactional(readOnly = true)
     public User findByLogin(String login) {
         log.info("Searching for user by login: {}", login);
         var foundUser = userRepository.findByLogin(login)

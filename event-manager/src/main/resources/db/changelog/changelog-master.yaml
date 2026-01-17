@@ -1,0 +1,36 @@
+databaseChangeLog:
+  - changeSet:
+      id: 001-create-locations
+      author: haritonenko
+      changes:
+        - sqlFile:
+            path: db/changelog/sql/001-create-locations.sql
+            splitStatements: true
+            stripComments: true
+
+  - changeSet:
+      id: 002-create-users
+      author: haritonenko
+      changes:
+        - sqlFile:
+            path: db/changelog/sql/002-create-users.sql
+            splitStatements: true
+            stripComments: true
+
+  - changeSet:
+      id: 003-create-events
+      author: haritonenko
+      changes:
+        - sqlFile:
+            path: db/changelog/sql/003-create-events.sql
+            splitStatements: true
+            stripComments: true
+
+  - changeSet:
+      id: 004-create-event-registrations
+      author: haritonenko
+      changes:
+        - sqlFile:
+            path: db/changelog/sql/004-create-event-registrations.sql
+            splitStatements: true
+            stripComments: true

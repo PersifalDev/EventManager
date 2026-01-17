@@ -5,7 +5,6 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
-import org.springframework.transaction.annotation.Transactional;
 import ru.haritonenko.eventmanager.event.domain.status.EventStatus;
 import ru.haritonenko.eventmanager.event.domain.db.entity.EventEntity;
 
@@ -19,7 +18,6 @@ import java.util.List;
 @Repository
 public interface EventRepository extends JpaRepository<EventEntity, Integer> {
 
-    @Transactional(readOnly = true)
     @Query("""
              SELECT e FROM EventEntity e
              WHERE e.owner.id = :id  
@@ -29,7 +27,6 @@ public interface EventRepository extends JpaRepository<EventEntity, Integer> {
             Pageable pageable
     );
 
-    @Transactional(readOnly = true)
     @Query(value = """
             SELECT r.event
             FROM EventRegistrationEntity r
@@ -41,7 +38,6 @@ public interface EventRepository extends JpaRepository<EventEntity, Integer> {
             Pageable pageable
     );
 
-    @Transactional(readOnly = true)
     @Query("""
                 SELECT e FROM EventEntity e
                 WHERE (:name IS NULL OR e.name = :name)
@@ -96,6 +92,5 @@ public interface EventRepository extends JpaRepository<EventEntity, Integer> {
             """)
     int resetOccupiedPlaces(@Param("eventId") Integer eventId);
 
-    @Transactional(readOnly = true)
     List<EventEntity> findByStatusIn(Collection<EventStatus> statuses);
 }

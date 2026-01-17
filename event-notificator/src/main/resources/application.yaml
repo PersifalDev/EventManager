@@ -11,9 +11,14 @@ spring:
     password: notification
     driver-class-name: org.postgresql.Driver
 
+
+  liquibase:
+    enabled: true
+    change-log: classpath:db/changelog/changelog-master.yaml
+
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: validate
     open-in-view: false
     show-sql: true
     properties:
@@ -22,6 +27,14 @@ spring:
           batch_size: 50
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
+
+  cache:
+    type: redis
+  data:
+    redis:
+      host: localhost
+      port: 6380
+      timeout: 2s
 
   kafka:
     consumer:
@@ -40,6 +53,10 @@ app:
   location:
     default-page-size: 5
     default-page-number: 0
+
+  cache:
+    default-ttl: 30s
+    unread-notifications-ttl: 30s
 
 jwt:
   secret-key: BC394D294B33EF525867C6B171EFBC77074D28CCF485F48280B62AE7DF911F38

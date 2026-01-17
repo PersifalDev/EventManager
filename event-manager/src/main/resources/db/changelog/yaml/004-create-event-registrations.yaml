@@ -1,0 +1,66 @@
+databaseChangeLog:
+  - changeSet:
+      id: 004-create-event-registrations
+      author: haritonenko
+      changes:
+        - createTable:
+            tableName: event_registrations
+            columns:
+              - column:
+                  name: id
+                  type: int
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+
+              - column:
+                  name: user_id
+                  type: int
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: event_id
+                  type: int
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: status
+                  type: varchar(50)
+                  constraints:
+                    nullable: false
+
+        - addForeignKeyConstraint:
+            baseTableName: event_registrations
+            baseColumnNames: user_id
+            referencedTableName: users
+            referencedColumnNames: id
+            constraintName: fk_event_registrations_user
+
+        - addForeignKeyConstraint:
+            baseTableName: event_registrations
+            baseColumnNames: event_id
+            referencedTableName: events
+            referencedColumnNames: id
+            constraintName: fk_event_registrations_event
+
+        - addUniqueConstraint:
+            tableName: event_registrations
+            columnNames: user_id, event_id
+            constraintName: uk_event_registrations_user_event
+
+        - createIndex:
+            tableName: event_registrations
+            indexName: ix_event_registrations_user_id
+            columns:
+              - column:
+                  name: user_id
+
+        - createIndex:
+            tableName: event_registrations
+            indexName: ix_event_registrations_event_id
+            columns:
+              - column:
+                  name: event_id

@@ -11,15 +11,27 @@ spring:
     password: manager
     driver-class-name: org.postgresql.Driver
 
+  liquibase:
+    enabled: true
+    change-log: classpath:db/changelog/changelog-master.yaml
+
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: validate
     open-in-view: false
     show-sql: true
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
+
+  cache:
+    type: redis
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      timeout: 2s
 
   kafka:
     bootstrap-servers: localhost:9092
@@ -43,10 +55,16 @@ app:
     default-page-size: 5
     default-page-number: 0
 
+  cache:
+    default-ttl: 30s
+    events-ttl: 30s
+    locations-ttl: 30s
+    registrations-ttl: 30s
+    users-ttl: 30s
+
 scheduler:
   enabled: true
   event-status:
     fixed-delay-ms: 60000
-
 
 kafka-topic: event-changed-topic
