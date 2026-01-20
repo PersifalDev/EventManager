@@ -1,19 +1,20 @@
 package ru.haritonenko.eventnotificator.cache.config;
 
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.jsontype.BasicPolymorphicTypeValidator;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.EnableCaching;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.cache.RedisCacheConfiguration;
 import org.springframework.data.redis.cache.RedisCacheManager;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
-import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.RedisSerializationContext;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
+import ru.haritonenko.eventnotificator.domain.db.entity.EventNotificationEntity;
 
 import java.time.Duration;
 import java.util.HashMap;
@@ -23,43 +24,49 @@ import java.util.Map;
 @Configuration
 public class CacheConfig {
 
+    @Value("${app.cache.default-ttl:30s}")
+    private Duration defaultTtl;
+
+    @Value("${app.cache.unread-notifications-ttl:30s}")
+    private Duration notificationTtl;
+
     @Bean
-    public GenericJackson2JsonRedisSerializer redisValueSerializer() {
-        ObjectMapper mapper = new ObjectMapper();
-        mapper.findAndRegisterModules();
+    public RedisTemplate<String, EventNotificationEntity> redisNotificationTemplate(
+            RedisConnectionFactory redisConnectionFactory,
+            ObjectMapper objectMapper
+    ){
+        RedisTemplate<String,EventNotificationEntity> redisTemplate = new RedisTemplate<>();
+        redisTemplate.setConnectionFactory(redisConnectionFactory);
 
-        var ptv = BasicPolymorphicTypeValidator.builder()
-                .allowIfSubType("ru.haritonenko.")
-                .allowIfSubType("java.util.")
-                .allowIfSubType("java.time.")
-                .allowIfSubType("java.math.")
-                .build();
+        redisTemplate.setKeySerializer(new StringRedisSerializer());
 
-        mapper.activateDefaultTyping(ptv, ObjectMapper.DefaultTyping.NON_FINAL, JsonTypeInfo.As.PROPERTY);
+        var serializer = new Jackson2JsonRedisSerializer<>(objectMapper,EventNotificationEntity.class);
+        redisTemplate.setValueSerializer(serializer);
 
-        return new GenericJackson2JsonRedisSerializer(mapper);
+        redisTemplate.afterPropertiesSet();
+
+        return redisTemplate;
     }
 
     @Bean
     public CacheManager cacheManager(
-            RedisConnectionFactory connectionFactory,
-            GenericJackson2JsonRedisSerializer redisValueSerializer,
-            @Value("${app.cache.default-ttl:30s}") Duration defaultTtl,
-            @Value("${app.cache.unread-notifications-ttl:30s}") Duration unreadTtl
+            RedisConnectionFactory redisConnectionFactory,
+            ObjectMapper objectMapper
     ) {
-        var keySerializer = new StringRedisSerializer();
+        var jsonSerializer = new Jackson2JsonRedisSerializer<>(objectMapper, EventNotificationEntity.class);
 
-        RedisCacheConfiguration baseConfig = RedisCacheConfiguration.defaultCacheConfig()
+        RedisCacheConfiguration config = RedisCacheConfiguration.defaultCacheConfig()
                 .entryTtl(defaultTtl)
-                .serializeKeysWith(RedisSerializationContext.SerializationPair.fromSerializer(keySerializer))
-                .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(redisValueSerializer));
+                .serializeKeysWith(RedisSerializationContext.SerializationPair.fromSerializer(new StringRedisSerializer()))
+                .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(jsonSerializer));
 
         Map<String, RedisCacheConfiguration> perCache = new HashMap<>();
-        perCache.put("unread-notifications", baseConfig.entryTtl(unreadTtl));
+        perCache.put("unread-notifications", config.entryTtl(notificationTtl));
 
-        return RedisCacheManager.builder(connectionFactory)
-                .cacheDefaults(baseConfig)
+        return RedisCacheManager.builder(redisConnectionFactory)
+                .cacheDefaults(config)
                 .withInitialCacheConfigurations(perCache)
+                .transactionAware()
                 .build();
     }
 }

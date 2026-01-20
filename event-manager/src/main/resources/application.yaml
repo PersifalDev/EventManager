@@ -61,6 +61,8 @@ app:
     locations-ttl: 30s
     registrations-ttl: 30s
     users-ttl: 30s
+    user-booked-events-ttl: 20s
+    user-created-events-ttl: 30s
 
 scheduler:
   enabled: true

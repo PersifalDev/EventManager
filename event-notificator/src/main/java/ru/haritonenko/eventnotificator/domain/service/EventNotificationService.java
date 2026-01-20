@@ -3,9 +3,8 @@ package ru.haritonenko.eventnotificator.domain.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.haritonenko.commonlibs.dto.changes.EventFieldChange;
@@ -17,6 +16,7 @@ import ru.haritonenko.eventnotificator.domain.db.entity.EventNotificationEntity;
 import ru.haritonenko.eventnotificator.domain.db.repository.EventNotificationRepository;
 import ru.haritonenko.eventnotificator.domain.mapper.EventNotificationEntityMapper;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -32,8 +32,14 @@ import static java.util.Objects.nonNull;
 @RequiredArgsConstructor
 public class EventNotificationService {
 
+    private static final String CACHE_KEY_PREFIX = "unread-notifications:";
+
+    @Value("${app.cache.unread-notifications-ttl:30s}")
+    private Duration cacheTtl;
+
     private final EventNotificationRepository notificationRepository;
     private final EventNotificationEntityMapper mapper;
+    private final RedisTemplate<String, EventNotificationEntity> redisTemplate;
 
     @Value("${app.location.default-page-size}")
     private int defaultPageSize;
@@ -41,43 +47,91 @@ public class EventNotificationService {
     @Value("${app.location.default-page-number}")
     private int defaultPageNumber;
 
-    @Cacheable(
-            cacheNames = "unread-notifications",
-            key = "#user.id() + ':' + (#pageFilter?.pageNumber() ?: 0) + ':' + (#pageFilter?.pageSize() ?: 5)"
-    )
     @Transactional(readOnly = true)
     public List<EventNotification> findUnreadNotificationsForUser(
             AuthUser user,
             EventNotificationPageFilter pageFilter
     ) {
         log.info("Searching for unread user notification");
+
         if (isNull(user)) {
+            log.warn("Error while authentication");
             throw new IllegalStateException("Authentication not present");
         }
         if (isNull(pageFilter)) {
             pageFilter = new EventNotificationPageFilter(null, null);
         }
 
-        return notificationRepository.findAllUnredNotificationsByUserId(user.id(), getPageable(pageFilter))
-                .stream()
-                .map(mapper::toDomain)
-                .sorted(Comparator.comparing(EventNotification::id))
-                .collect(Collectors.toList());
+        Pageable pageable = getPageable(pageFilter);
+        int pageNumber = pageable.getPageNumber();
+        int pageSize = pageable.getPageSize();
+
+        String cacheKey = CACHE_KEY_PREFIX + user.id();
+
+        long start = (long) pageNumber * pageSize;
+        long end = start + pageSize - 1;
+
+        List<EventNotificationEntity> cachedNotificationList = redisTemplate.opsForList().range(cacheKey, start, end);
+
+        if (nonNull(cachedNotificationList) && !cachedNotificationList.isEmpty()) {
+            log.info("Unread notification list was found in cache for user with id: {}", user.id());
+            return cachedNotificationList.stream()
+                    .map(mapper::toDomain)
+                    .sorted(Comparator.comparing(EventNotification::id))
+                    .collect(Collectors.toList());
+        }
+
+        Long cachedSize = redisTemplate.opsForList().size(cacheKey);
+        if (nonNull(cachedSize) && cachedSize > 0) {
+            log.info("Unread notification list exists in cache but requested page is empty for user with id: {}", user.id());
+            return List.of();
+        }
+
+        log.info("Unread notification list not found in cache for user with id: {}", user.id());
+
+        List<EventNotificationEntity> notificationListFromDb = notificationRepository.findAllUnredNotificationsByUserId(user.id());
+        if (nonNull(notificationListFromDb) && !notificationListFromDb.isEmpty()) {
+            notificationListFromDb = notificationListFromDb
+                    .stream()
+                    .sorted(Comparator.comparing(EventNotificationEntity::getId))
+                    .toList();
+
+            redisTemplate.delete(cacheKey);
+            redisTemplate.opsForList().rightPushAll(cacheKey, notificationListFromDb);
+            redisTemplate.expire(cacheKey, cacheTtl);
+
+            List<EventNotificationEntity> notificationListFromDbPage = notificationListFromDb.subList(
+                    (int) Math.min(start, notificationListFromDb.size()),
+                    (int) Math.min(end + 1, notificationListFromDb.size())
+            );
+
+            log.info("Unread notification list cached for user with id: {}", user.id());
+
+            return notificationListFromDbPage.stream()
+                    .map(mapper::toDomain)
+                    .collect(Collectors.toList());
+        }
+
+        return List.of();
     }
 
-    @CacheEvict(cacheNames = "unread-notifications", allEntries = true)
     @Transactional
     public void markNotificationsAsRead(AuthUser user, List<Integer> notificationIds) {
         if (isNull(user)) {
+            log.warn("Error while user authentication");
             throw new IllegalStateException("Authentication not present");
         }
         if (isNull(notificationIds) || notificationIds.isEmpty()) {
             return;
         }
+
         notificationRepository.markUserNotificationsAsRead(user.id(), notificationIds);
+
+        String cacheKey = CACHE_KEY_PREFIX + user.id();
+        redisTemplate.delete(cacheKey);
+        log.info("Cache invalidated for marked notifications as read for user with id:{}", user.id());
     }
 
-    @CacheEvict(cacheNames = "unread-notifications", allEntries = true)
     @Transactional
     public void saveNotificationsFromKafka(EventChangeKafkaMessage message) {
         if (isNull(message) || isNull(message.users()) || message.users().isEmpty()) {
@@ -86,9 +140,12 @@ public class EventNotificationService {
 
         String text = buildMessageText(message);
 
-        List<EventNotificationEntity> entities = message.users().stream()
+        List<Integer> userIds = message.users().stream()
                 .filter(Objects::nonNull)
                 .distinct()
+                .toList();
+
+        List<EventNotificationEntity> notificationEntities = userIds.stream()
                 .map(userId -> EventNotificationEntity.builder()
                         .id(null)
                         .userId(userId)
@@ -99,7 +156,13 @@ public class EventNotificationService {
                         .build())
                 .toList();
 
-        notificationRepository.saveAll(entities);
+        notificationRepository.saveAll(notificationEntities);
+
+        for (Integer userId : userIds) {
+            String cacheKey = CACHE_KEY_PREFIX + userId;
+            redisTemplate.delete(cacheKey);
+            log.info("Notifications cache invalidated for user with id:{}", userId);
+        }
     }
 
     private String buildMessageText(EventChangeKafkaMessage message) {
