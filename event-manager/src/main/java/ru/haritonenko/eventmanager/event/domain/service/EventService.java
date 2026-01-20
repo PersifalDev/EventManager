@@ -71,7 +71,7 @@ public class EventService {
     @Value("${app.location.default-page-number}")
     private int defaultPageNumber;
 
-    @Cacheable(cacheNames = "events", key = "#id")
+    @Cacheable(value = "events", key = "#id")
     @Transactional(readOnly = true)
     public Event getEventById(Integer id) {
         log.info("Getting event by id: {}", id);
@@ -80,6 +80,7 @@ public class EventService {
         return eventEntityMapper.toDomain(foundEvent);
     }
 
+    @CacheEvict(value = "user-created-events", allEntries = true)
     @Transactional
     public Event createEventByUserId(
             Integer ownerId,
@@ -102,9 +103,9 @@ public class EventService {
     }
 
     @Caching(evict = {
-            @CacheEvict(cacheNames = "events", key = "#eventId"),
-            @CacheEvict(cacheNames = "user-created-events", allEntries = true),
-            @CacheEvict(cacheNames = "user-booked-events", allEntries = true)
+            @CacheEvict(value = "events", key = "#eventId"),
+            @CacheEvict(value = "user-created-events", allEntries = true),
+            @CacheEvict(value = "user-booked-events", allEntries = true)
     })
     @Transactional
     public Event updateEvent(
@@ -150,8 +151,8 @@ public class EventService {
     }
 
     @Cacheable(
-            cacheNames = "user-created-events",
-            key = "#userFromRequest.id() + ':' + (#pageFilter.pageNumber()?:0) + ':' + (#pageFilter.pageSize()?:0)"
+            value = "user-created-events",
+            key = "#userFromRequest.id() + ':' + (#pageFilter.pageNumber()?:0) + ':' + (#pageFilter.pageSize()?:20)"
     )
     @Transactional(readOnly = true)
     public List<Event> findEventsCreatedByUser(
@@ -169,8 +170,8 @@ public class EventService {
     }
 
     @Cacheable(
-            cacheNames = "user-booked-events",
-            key = "#user.id() + ':' + (#pageFilter.pageNumber()?:0) + ':' + (#pageFilter.pageSize()?:0)"
+            value = "user-booked-events",
+            key = "#user.id() + ':' + (#pageFilter.pageNumber()?:0) + ':' + (#pageFilter.pageSize()?:20)"
     )
     @Transactional(readOnly = true)
     public List<Event> findBookedEventByUserId(
@@ -224,12 +225,12 @@ public class EventService {
         return getSortedEventListByEventId(foundEventsWithFilter);
     }
 
-    @Caching(evict = {
-            @CacheEvict(cacheNames = "events", key = "#eventId"),
-            @CacheEvict(cacheNames = "user-booked-events", allEntries = true)
-    })
+    @CacheEvict(value = "events", key = "#eventId")
     @Transactional
-    public Event registerOnEvent(Integer userId, Integer eventId) {
+    public Event registerOnEvent(
+            Integer userId,
+            Integer eventId
+    ) {
         log.info("Registration user on event");
         var user = getUserByIdOrThrow(userId);
         var event = getEventByIdOrThrow(eventId);
@@ -266,9 +267,9 @@ public class EventService {
     }
 
     @Caching(evict = {
-            @CacheEvict(cacheNames = "events", key = "#eventId"),
-            @CacheEvict(cacheNames = "user-created-events", allEntries = true),
-            @CacheEvict(cacheNames = "user-booked-events", allEntries = true)
+            @CacheEvict(value = "events", key = "#eventId"),
+            @CacheEvict(value = "user-created-events", allEntries = true),
+            @CacheEvict(value = "user-booked-events", allEntries = true)
     })
     @Transactional
     public void deleteEventById(Integer ownerId, Integer eventId) {
@@ -307,10 +308,7 @@ public class EventService {
         checkCorrectUpdateOrThrow(updatedPlaces, "Error while updating event occupied places");
     }
 
-    @Caching(evict = {
-            @CacheEvict(cacheNames = "events", key = "#eventId"),
-            @CacheEvict(cacheNames = "user-booked-events", allEntries = true)
-    })
+    @CacheEvict(value = "events", key = "#eventId")
     @Transactional
     public void cancelEventRegistrationRequestById(Integer userId, Integer eventId) {
         log.info("Cancelling event registration by id: {}", eventId);

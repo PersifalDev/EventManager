@@ -23,6 +23,21 @@ import java.util.Map;
 @Configuration
 public class CacheConfig {
 
+    @Value("${app.cache.default-ttl:30s}")
+    private Duration defaultTtl;
+    @Value("${app.cache.events-ttl:30s}")
+    private Duration eventsTtl;
+    @Value("${app.cache.locations-ttl:30s}")
+    private Duration locationsTtl;
+    @Value("${app.cache.registrations-ttl:30s}")
+    private Duration registrationsTtl;
+    @Value("${app.cache.users-ttl:30s}")
+    private Duration usersTtl;
+    @Value("${app.cache.user-booked-events-ttl:30s}")
+    private Duration userBookedEventsTtl;
+    @Value("${app.cache.user-created-events-ttl:30s}")
+    private Duration userCreatedEventsTtl;
+
     @Bean
     public GenericJackson2JsonRedisSerializer redisValueSerializer() {
         ObjectMapper mapper = new ObjectMapper();
@@ -36,19 +51,13 @@ public class CacheConfig {
                 .build();
 
         mapper.activateDefaultTyping(ptv, ObjectMapper.DefaultTyping.EVERYTHING, JsonTypeInfo.As.PROPERTY);
-
         return new GenericJackson2JsonRedisSerializer(mapper);
     }
 
     @Bean
     public CacheManager cacheManager(
             RedisConnectionFactory connectionFactory,
-            GenericJackson2JsonRedisSerializer redisValueSerializer,
-            @Value("${app.cache.default-ttl:30s}") Duration defaultTtl,
-            @Value("${app.cache.events-ttl:30s}") Duration eventsTtl,
-            @Value("${app.cache.locations-ttl:30s}") Duration locationsTtl,
-            @Value("${app.cache.registrations-ttl:30s}") Duration registrationsTtl,
-            @Value("${app.cache.users-ttl:30s}") Duration usersTtl
+            GenericJackson2JsonRedisSerializer redisValueSerializer
     ) {
         var keySerializer = new StringRedisSerializer();
 
@@ -62,8 +71,8 @@ public class CacheConfig {
         perCache.put("locations", baseConfig.entryTtl(locationsTtl));
         perCache.put("registrations", baseConfig.entryTtl(registrationsTtl));
         perCache.put("users", baseConfig.entryTtl(usersTtl));
-        perCache.put("user-created-events", baseConfig.entryTtl(eventsTtl));
-        perCache.put("user-booked-events", baseConfig.entryTtl(eventsTtl));
+        perCache.put("user-created-events", baseConfig.entryTtl(userCreatedEventsTtl));
+        perCache.put("user-booked-events", baseConfig.entryTtl(userBookedEventsTtl));
 
         return RedisCacheManager.builder(connectionFactory)
                 .cacheDefaults(baseConfig)

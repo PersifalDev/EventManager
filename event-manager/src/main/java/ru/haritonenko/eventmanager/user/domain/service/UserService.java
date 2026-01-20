@@ -24,7 +24,7 @@ public class UserService {
     private final UserEntityMapper mapper;
     private final PasswordEncoder passwordEncoder;
 
-    @Cacheable(cacheNames = "users", key = "'id:' + #id")
+    @Cacheable(value = "users", key = "'id:' + #id")
     @Transactional(readOnly = true)
     public User getUserById(Integer id) {
         log.info("Getting user by id: {}", id);
@@ -38,8 +38,8 @@ public class UserService {
     }
 
     @Caching(put = {
-            @CachePut(cacheNames = "users", key = "'id:' + #result.id()"),
-            @CachePut(cacheNames = "users", key = "'login:' + #result.login()")
+            @CachePut(value = "users", key = "'id:' + #result.id()"),
+            @CachePut(value = "users", key = "'login:' + #result.login()")
     })
     @Transactional
     public User register(UserRegistration userFromRegistration) {
@@ -55,7 +55,7 @@ public class UserService {
         return mapper.toDomain(savedUserEntity);
     }
 
-    @Cacheable(cacheNames = "users", key = "'login:' + #login")
+    @Cacheable(value = "users", key = "'login:' + #login")
     @Transactional(readOnly = true)
     public User findByLogin(String login) {
         log.info("Searching for user by login: {}", login);

@@ -72,7 +72,7 @@ public class EventLocationService {
         return mapper.toDomain(savedLocationEntity);
     }
 
-    @Cacheable(cacheNames = "locations", key = "#id")
+    @Cacheable(value = "locations", key = "#id")
     @Transactional(readOnly = true)
     public EventLocation getLocationById(Integer id) {
         log.info("Getting location by id: {}", id);
@@ -86,7 +86,7 @@ public class EventLocationService {
         return mapper.toDomain(foundLocation);
     }
 
-    @CachePut(cacheNames = "locations", key = "#id")
+    @CachePut(value = "locations", key = "#id")
     @Transactional
     public EventLocation updateLocation(Integer id, EventLocation eventLocationToUpdate) {
         log.info("Updating location with id: {}", id);
@@ -103,7 +103,7 @@ public class EventLocationService {
         return mapper.toDomain(locationRepository.findById(id).orElseThrow());
     }
 
-    @CacheEvict(cacheNames = "locations", key = "#id")
+    @CacheEvict(value = "locations", key = "#id")
     @Transactional
     public void deleteLocation(Integer id) {
         log.info("Deleting location by id: {}", id);
