@@ -33,7 +33,7 @@ public class UserController {
     @GetMapping("/{id}")
     @PreAuthorize("hasAuthority('ADMIN')")
     public UserDto getUserById(
-            @PathVariable Integer id
+            @PathVariable Long id
     ) {
         log.info("Get request for getting user by id: {}", id);
         var foundUser = userService.getUserById(id);

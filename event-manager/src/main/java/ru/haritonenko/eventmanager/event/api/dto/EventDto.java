@@ -11,7 +11,7 @@ import java.math.BigDecimal;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public record EventDto(
         @Null
-        Integer id,
+        Long id,
         @NotBlank(message = "Event name can not be blank")
         @Size(min = 1, max = 50, message = "Min name size is 1, max is 50")
         String name,
@@ -33,7 +33,7 @@ public record EventDto(
         @Min(value = 30, message = "Min duration is 30")
         Integer duration,
         @NotNull(message = "Event location id can not be null")
-        Integer locationId,
+        Long locationId,
         @NotNull(message = "Event status can not be null")
         EventStatus status
 ) {

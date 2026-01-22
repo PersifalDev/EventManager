@@ -8,21 +8,20 @@ databaseChangeLog:
             columns:
               - column:
                   name: id
-                  type: int
-                  autoIncrement: true
+                  type: BIGSERIAL
                   constraints:
                     primaryKey: true
                     nullable: false
 
               - column:
                   name: user_id
-                  type: int
+                  type: BIGINT
                   constraints:
                     nullable: false
 
               - column:
                   name: event_id
-                  type: int
+                  type: BIGINT
                   constraints:
                     nullable: false
 

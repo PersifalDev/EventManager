@@ -73,7 +73,7 @@ public class EventService {
 
     @Cacheable(value = "events", key = "#id")
     @Transactional(readOnly = true)
-    public Event getEventById(Integer id) {
+    public Event getEventById(Long id) {
         log.info("Getting event by id: {}", id);
         var foundEvent = getEventByIdOrThrow(id);
         log.info("Event was successfully found by id: {}", id);
@@ -83,7 +83,7 @@ public class EventService {
     @CacheEvict(value = "user-created-events", allEntries = true)
     @Transactional
     public Event createEventByUserId(
-            Integer ownerId,
+            Long ownerId,
             EventCreateRequestDto eventToCreate
     ) {
         log.info("Creating an event");
@@ -109,8 +109,8 @@ public class EventService {
     })
     @Transactional
     public Event updateEvent(
-            Integer ownerId,
-            Integer eventId,
+            Long ownerId,
+            Long eventId,
             EventUpdateRequestDto eventToUpdate
     ) {
         log.info("Updating event with id: {}", eventId);
@@ -142,7 +142,7 @@ public class EventService {
                 eventBeforeChangesSnapshot,
                 event,
                 ownerId,
-                getUsersSubscribedToEventList(event)
+                getSubscribedUsersIdsToEventList(event)
         );
         if (nonNull(message)) {
             kafkaEventSender.sendKafkaEvent(message);
@@ -228,8 +228,8 @@ public class EventService {
     @CacheEvict(value = "events", key = "#eventId")
     @Transactional
     public Event registerOnEvent(
-            Integer userId,
-            Integer eventId
+            Long userId,
+            Long eventId
     ) {
         log.info("Registration user on event");
         var user = getUserByIdOrThrow(userId);
@@ -272,7 +272,7 @@ public class EventService {
             @CacheEvict(value = "user-booked-events", allEntries = true)
     })
     @Transactional
-    public void deleteEventById(Integer ownerId, Integer eventId) {
+    public void deleteEventById(Long ownerId, Long eventId) {
         log.info("Deleting event by id: {}", eventId);
 
         var event = getEventByIdOrThrow(eventId);
@@ -296,7 +296,7 @@ public class EventService {
                 eventBeforeChangesSnapshot,
                 event,
                 ownerId,
-                getUsersSubscribedToEventList(event)
+                getSubscribedUsersIdsToEventList(event)
         );
 
         if (nonNull(message)) {
@@ -310,7 +310,7 @@ public class EventService {
 
     @CacheEvict(value = "events", key = "#eventId")
     @Transactional
-    public void cancelEventRegistrationRequestById(Integer userId, Integer eventId) {
+    public void cancelEventRegistrationRequestById(Long userId, Long eventId) {
         log.info("Cancelling event registration by id: {}", eventId);
 
         var event = getEventByIdOrThrow(eventId);
@@ -353,7 +353,7 @@ public class EventService {
         }
     }
 
-    private UserEntity getUserByIdOrThrow(Integer ownerId) {
+    private UserEntity getUserByIdOrThrow(Long ownerId) {
         return userRepository.findById(ownerId)
                 .orElseThrow(() -> {
                     log.warn("Error while finding user by id: {}", ownerId);
@@ -361,7 +361,7 @@ public class EventService {
                 });
     }
 
-    private EventEntity getEventByIdOrThrow(Integer eventId) {
+    private EventEntity getEventByIdOrThrow(Long eventId) {
         return eventRepository.findById(eventId)
                 .orElseThrow(() -> {
                     log.warn("Error while searching for event by id: {}", eventId);
@@ -369,7 +369,7 @@ public class EventService {
                 });
     }
 
-    private EventLocationEntity getEventLocationByIdOrThrow(Integer locationId) {
+    private EventLocationEntity getEventLocationByIdOrThrow(Long locationId) {
         return eventLocationRepository.findById(locationId)
                 .orElseThrow(() -> {
                     log.warn("Error while searching for event location by id: {}", locationId);
@@ -377,7 +377,7 @@ public class EventService {
                 });
     }
 
-    private EventRegistrationEntity getEventRegistrationByUserIdAndEventIdOrThrow(Integer userId, Integer eventId) {
+    private EventRegistrationEntity getEventRegistrationByUserIdAndEventIdOrThrow(Long userId, Long eventId) {
         return eventRegistrationRepository.findByUserIdAndEventId(userId, eventId)
                 .orElseThrow(() -> {
                     log.warn("Error while searching for registration  by userId: {} and eventId: {} ", userId, eventId);
@@ -407,7 +407,7 @@ public class EventService {
         }
     }
 
-    private void checkEventCreatorIsNotMemberOrThrow(EventEntity eventToBeBookedByUser, Integer userId) {
+    private void checkEventCreatorIsNotMemberOrThrow(EventEntity eventToBeBookedByUser, Long userId) {
         if (Objects.equals(eventToBeBookedByUser.getOwner().getId(), userId)) {
             log.warn("Error while checking event creator");
             throw new UserAlreadyRegisteredOnEventException("Event creator is member by default");
@@ -458,7 +458,7 @@ public class EventService {
         }
     }
 
-    private void checkCorrectUpdateOrThrow(Integer updated, String message) {
+    private void checkCorrectUpdateOrThrow(int updated, String message) {
         if (updated == 0) {
             log.warn("Error while updating event place");
             throw new IllegalStateException(message);
@@ -468,8 +468,8 @@ public class EventService {
     private EventChangeKafkaMessage buildChangeNotification(
             EventEntity beforeChanges,
             EventEntity afterChanges,
-            Integer changedById,
-            List<Integer> users
+            Long changedById,
+            List<Long> users
     ) {
         var name = !Objects.equals(beforeChanges.getName(), afterChanges.getName())
                 ? new EventFieldChange<>(beforeChanges.getName(), afterChanges.getName())
@@ -499,8 +499,8 @@ public class EventService {
             throw new LocationNotFoundException("Event location must not be null");
         }
 
-        Integer beforeLocationId = beforeChanges.getLocation().getId();
-        Integer afterLocationId = afterChanges.getLocation().getId();
+        Long beforeLocationId = beforeChanges.getLocation().getId();
+        Long afterLocationId = afterChanges.getLocation().getId();
 
         var locationId = !Objects.equals(beforeLocationId, afterLocationId)
                 ? new EventFieldChange<>(beforeLocationId, afterLocationId)
@@ -529,7 +529,7 @@ public class EventService {
                 .build();
     }
 
-    private List<Integer> getUsersSubscribedToEventList(EventEntity event) {
+    private List<Long> getSubscribedUsersIdsToEventList(EventEntity event) {
         return event.getRegistrations().stream()
                 .filter(Objects::nonNull)
                 .filter(registration -> registration.getStatus() == EventRegistrationStatus.ACTIVE)

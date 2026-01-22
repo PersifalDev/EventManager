@@ -28,7 +28,7 @@ public class JwtTokenManager {
         this.key = Keys.hmacShaKeyFor(keyString.getBytes(StandardCharsets.UTF_8));
     }
 
-    public String generateToken(Integer userId, String login, String role) {
+    public String generateToken(Long userId, String login, String role) {
         return Jwts
                 .builder()
                 .subject(login)
@@ -47,7 +47,7 @@ public class JwtTokenManager {
                 .parseSignedClaims(jwt)
                 .getPayload();
 
-        Integer userId = claims.get("userId", Integer.class);
+        Long userId = claims.get("userId", Long.class);
         String login = claims.getSubject();
         String role = claims.get("role", String.class);
 

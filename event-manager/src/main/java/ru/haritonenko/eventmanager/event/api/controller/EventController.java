@@ -30,7 +30,7 @@ public class EventController {
 
     @GetMapping("/{id}")
     public EventDto getById(
-            @PathVariable Integer id
+            @PathVariable Long id
     ) {
         log.info("Get request for getting event by id: {}", id);
         var foundEvent = eventService.getEventById(id);
@@ -90,7 +90,7 @@ public class EventController {
 
     @PostMapping("/registrations/{id}")
     public EventDto registerUserOnEvent(
-            @PathVariable("id") Integer eventId
+            @PathVariable("id") Long eventId
     ) {
         log.info("Post request for register a new user on event with eventId: {}", eventId);
         var eventThatUserRegisteredOn = eventService.registerOnEvent(
@@ -102,7 +102,7 @@ public class EventController {
 
     @PutMapping("/{id}")
     public EventDto updateEvent(
-            @PathVariable("id") Integer eventId,
+            @PathVariable("id") Long eventId,
             @RequestBody @Valid EventUpdateRequestDto eventFromUpdateRequest
     ) {
         log.info("Put request for updating event: {}", eventFromUpdateRequest);
@@ -117,7 +117,7 @@ public class EventController {
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteEventById(
-            @PathVariable("id") Integer eventId
+            @PathVariable("id") Long eventId
     ) {
         log.info("Delete request for deleting event with id: {}", eventId);
         eventService.deleteEventById(
@@ -129,7 +129,7 @@ public class EventController {
     @DeleteMapping("/registrations/cancel/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteEventRegistrationRequest(
-            @PathVariable("id") Integer eventId
+            @PathVariable("id") Long eventId
     ) {
         log.info("Delete request for cancel event registration from event with id: {}", eventId);
         eventService.cancelEventRegistrationRequestById(

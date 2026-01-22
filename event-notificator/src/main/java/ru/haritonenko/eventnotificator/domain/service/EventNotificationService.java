@@ -116,7 +116,7 @@ public class EventNotificationService {
     }
 
     @Transactional
-    public void markNotificationsAsRead(AuthUser user, List<Integer> notificationIds) {
+    public void markNotificationsAsRead(AuthUser user, List<Long> notificationIds) {
         if (isNull(user)) {
             log.warn("Error while user authentication");
             throw new IllegalStateException("Authentication not present");
@@ -140,7 +140,7 @@ public class EventNotificationService {
 
         String text = buildMessageText(message);
 
-        List<Integer> userIds = message.users().stream()
+        List<Long> userIds = message.users().stream()
                 .filter(Objects::nonNull)
                 .distinct()
                 .toList();
@@ -158,7 +158,7 @@ public class EventNotificationService {
 
         notificationRepository.saveAll(notificationEntities);
 
-        for (Integer userId : userIds) {
+        for (Long userId : userIds) {
             String cacheKey = CACHE_KEY_PREFIX + userId;
             redisTemplate.delete(cacheKey);
             log.info("Notifications cache invalidated for user with id:{}", userId);

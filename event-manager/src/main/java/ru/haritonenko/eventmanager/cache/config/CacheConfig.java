@@ -48,6 +48,7 @@ public class CacheConfig {
                 .allowIfSubType("java.util.")
                 .allowIfSubType("java.time.")
                 .allowIfSubType("java.math.")
+                .allowIfSubType("org.springframework.cache.support.")
                 .build();
 
         mapper.activateDefaultTyping(ptv, ObjectMapper.DefaultTyping.EVERYTHING, JsonTypeInfo.As.PROPERTY);
@@ -63,6 +64,7 @@ public class CacheConfig {
 
         RedisCacheConfiguration baseConfig = RedisCacheConfiguration.defaultCacheConfig()
                 .entryTtl(defaultTtl)
+                .computePrefixWith(cacheName -> "eventmanager:v1:" + cacheName + "::")
                 .serializeKeysWith(RedisSerializationContext.SerializationPair.fromSerializer(keySerializer))
                 .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(redisValueSerializer));
 

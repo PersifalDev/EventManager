@@ -27,7 +27,7 @@ public class EventRegistrationEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @EqualsAndHashCode.Include
-    private Integer id;
+    private Long id;
 
     @NotNull(message = "User can not be null for registration")
     @ManyToOne(fetch = FetchType.LAZY)

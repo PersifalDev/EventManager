@@ -43,7 +43,7 @@ public class EventStatusScheduler {
         int finishedRegistrationsEventsCounter = 0;
         int skippedEventBadDateCounter = 0;
 
-        List<Integer> finishedEventsIds = new ArrayList<>();
+        List<Long> finishedEventsIds = new ArrayList<>();
 
         log.info("Parsing date");
         for (EventEntity event : events) {
@@ -82,7 +82,7 @@ public class EventStatusScheduler {
             }
         }
 
-        for (Integer eventId : finishedEventsIds) {
+        for (Long eventId : finishedEventsIds) {
             finishedRegistrationsEventsCounter += eventRegistrationRepository.updateStatusByEventId(
                     eventId,
                     EventRegistrationStatus.FINISHED,

@@ -3,7 +3,7 @@ import ru.haritonenko.eventmanager.event.domain.status.EventStatus;
 import java.math.BigDecimal;
 
 public record Event(
-        Integer id,
+        Long id,
         String name,
         String ownerId,
         Integer maxPlaces,
@@ -11,7 +11,7 @@ public record Event(
         String date,
         BigDecimal cost,
         Integer duration,
-        Integer locationId,
+        Long locationId,
         EventStatus status
 ) {
 }

@@ -7,16 +7,16 @@ import java.util.List;
 
 @Builder
 public record EventChangeKafkaMessage(
-        List<Integer> users,
-        Integer ownerId,
-        Integer changedById,
-        Integer eventId,
+        List<Long> users,
+        Long ownerId,
+        Long changedById,
+        Long eventId,
         EventFieldChange<String> name,
         EventFieldChange<Integer> maxPlaces,
         EventFieldChange<String> time,
         EventFieldChange<Number> cost,
         EventFieldChange<Integer> duration,
         EventFieldChange<String> status,
-        EventFieldChange<Integer> locationId
+        EventFieldChange<Long> locationId
 ) {
 }
