@@ -16,14 +16,14 @@ import java.util.Collection;
 import java.util.List;
 
 @Repository
-public interface EventRepository extends JpaRepository<EventEntity, Integer> {
+public interface EventRepository extends JpaRepository<EventEntity, Long> {
 
     @Query("""
              SELECT e FROM EventEntity e
              WHERE e.owner.id = :id  
             """)
     List<EventEntity> searchCreatedEventsByUserId(
-            @Param("id") Integer ownerId,
+            @Param("id") Long ownerId,
             Pageable pageable
     );
 
@@ -33,7 +33,7 @@ public interface EventRepository extends JpaRepository<EventEntity, Integer> {
             WHERE r.user.id = :id AND r.status = :status
             """)
     List<EventEntity> searchBookedEventsByUserId(
-            @Param("id") Integer userId,
+            @Param("id") Long userId,
             @Param("status") EventRegistrationStatus status,
             Pageable pageable
     );
@@ -62,7 +62,7 @@ public interface EventRepository extends JpaRepository<EventEntity, Integer> {
             @Param("costMax") BigDecimal costMax,
             @Param("durationMin") Integer durationMin,
             @Param("durationMax") Integer durationMax,
-            @Param("locationId") Integer locationId,
+            @Param("locationId") Long locationId,
             @Param("eventStatus") EventStatus status,
             Pageable pageable
     );
@@ -74,7 +74,7 @@ public interface EventRepository extends JpaRepository<EventEntity, Integer> {
                 SET e.occupiedPlaces = e.occupiedPlaces + 1
                 WHERE e.id = :eventId AND e.occupiedPlaces < e.maxPlaces
             """)
-    int incOccupiedPlaces(@Param("eventId") Integer eventId);
+    int incOccupiedPlaces(@Param("eventId") Long eventId);
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("""
@@ -82,7 +82,7 @@ public interface EventRepository extends JpaRepository<EventEntity, Integer> {
                 SET e.occupiedPlaces = e.occupiedPlaces - 1
                 WHERE e.id = :eventId AND e.occupiedPlaces > 0
             """)
-    int decOccupiedPlaces(@Param("eventId") Integer eventId);
+    int decOccupiedPlaces(@Param("eventId") Long eventId);
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("""
@@ -90,7 +90,7 @@ public interface EventRepository extends JpaRepository<EventEntity, Integer> {
                 SET e.occupiedPlaces = 0
                 WHERE e.id = :eventId
             """)
-    int resetOccupiedPlaces(@Param("eventId") Integer eventId);
+    int resetOccupiedPlaces(@Param("eventId") Long eventId);
 
     List<EventEntity> findByStatusIn(Collection<EventStatus> statuses);
 }

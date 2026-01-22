@@ -26,7 +26,7 @@ public class UserService {
 
     @Cacheable(value = "users", key = "'id:' + #id")
     @Transactional(readOnly = true)
-    public User getUserById(Integer id) {
+    public User getUserById(Long id) {
         log.info("Getting user by id: {}", id);
         var foundUser = userRepository.findById(id)
                 .orElseThrow(() -> {

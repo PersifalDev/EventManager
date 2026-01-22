@@ -21,7 +21,7 @@ public record EventSearchRequestDto(
         @Min(value = 30, message = "Min value for max duration is 30")
         Integer durationMax,
         @Min(value = 1, message = "Min location id is 1")
-        Integer locationId,
+        Long locationId,
         EventStatus eventStatus
 ) {
 }

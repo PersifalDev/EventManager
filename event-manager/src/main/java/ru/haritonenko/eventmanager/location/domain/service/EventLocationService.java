@@ -74,7 +74,7 @@ public class EventLocationService {
 
     @Cacheable(value = "locations", key = "#id")
     @Transactional(readOnly = true)
-    public EventLocation getLocationById(Integer id) {
+    public EventLocation getLocationById(Long id) {
         log.info("Getting location by id: {}", id);
         var foundLocation = locationRepository.findById(id)
                 .orElseThrow(() -> {
@@ -88,7 +88,7 @@ public class EventLocationService {
 
     @CachePut(value = "locations", key = "#id")
     @Transactional
-    public EventLocation updateLocation(Integer id, EventLocation eventLocationToUpdate) {
+    public EventLocation updateLocation(Long id, EventLocation eventLocationToUpdate) {
         log.info("Updating location with id: {}", id);
         checkLocationIsExistedByIdOrThrow(id);
         checkNewLocationCapacityMoreOrEqualsOldOrThrow(id, eventLocationToUpdate);
@@ -105,7 +105,7 @@ public class EventLocationService {
 
     @CacheEvict(value = "locations", key = "#id")
     @Transactional
-    public void deleteLocation(Integer id) {
+    public void deleteLocation(Long id) {
         log.info("Deleting location by id: {}", id);
         checkLocationIsExistedByIdOrThrow(id);
         locationRepository.deleteById(id);
@@ -113,7 +113,7 @@ public class EventLocationService {
     }
 
     private void checkLocationIsExistedByIdOrThrow(
-            Integer id
+            Long id
     ) {
         if (!locationRepository.existsById(id)) {
             log.warn("Error while finding location by id: {}", id);
@@ -123,7 +123,7 @@ public class EventLocationService {
     }
 
     private void checkNewLocationCapacityMoreOrEqualsOldOrThrow(
-            Integer id,
+            Long id,
             EventLocation eventLocationToUpdate
     ) {
         var oldLocation = locationRepository.findById(id)

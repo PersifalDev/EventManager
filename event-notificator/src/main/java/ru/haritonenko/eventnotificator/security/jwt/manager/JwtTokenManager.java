@@ -31,7 +31,7 @@ public class JwtTokenManager {
                 .parseSignedClaims(jwt)
                 .getPayload();
 
-        Integer id = claims.get("userId", Integer.class);
+        Long id = claims.get("userId", Long.class);
         String login = claims.getSubject();
         String role = claims.get("role", String.class);
 

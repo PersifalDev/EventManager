@@ -11,7 +11,7 @@ import ru.haritonenko.eventmanager.location.domain.db.entity.EventLocationEntity
 import java.util.List;
 
 @Repository
-public interface EventLocationRepository extends JpaRepository<EventLocationEntity, Integer> {
+public interface EventLocationRepository extends JpaRepository<EventLocationEntity, Long> {
 
     @Query("""
                 SELECT l FROM EventLocationEntity l
@@ -24,7 +24,7 @@ public interface EventLocationRepository extends JpaRepository<EventLocationEnti
             Pageable pageable
     );
 
-    @Modifying
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("""
                 UPDATE EventLocationEntity l
                 SET l.name = :name,
@@ -34,7 +34,7 @@ public interface EventLocationRepository extends JpaRepository<EventLocationEnti
                WHERE l.id = :id
             """)
     void updateLocation(
-            @Param("id") Integer id,
+            @Param("id") Long id,
             @Param("name") String name,
             @Param("address") String address,
             @Param("capacity") Integer capacity,

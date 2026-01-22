@@ -12,7 +12,7 @@ import ru.haritonenko.commonlibs.dto.notification.EventChangeKafkaMessage;
 @RequiredArgsConstructor
 public class KafkaEventSender {
 
-    private final KafkaTemplate<Integer, EventChangeKafkaMessage> kafkaTemplate;
+    private final KafkaTemplate<Long, EventChangeKafkaMessage> kafkaTemplate;
 
     @Value("${kafka-topic}")
     private String eventTopic;

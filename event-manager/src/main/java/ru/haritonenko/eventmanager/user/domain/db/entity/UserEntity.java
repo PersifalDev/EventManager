@@ -27,7 +27,7 @@ public class UserEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @EqualsAndHashCode.Include
-    private Integer id;
+    private Long id;
 
     @NotBlank(message = "User login can not be blank")
     @Size(min = 4, message = "Min login size is 4")

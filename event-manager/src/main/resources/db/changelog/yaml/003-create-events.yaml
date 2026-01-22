@@ -8,8 +8,7 @@ databaseChangeLog:
             columns:
               - column:
                   name: id
-                  type: int
-                  autoIncrement: true
+                  type: BIGSERIAL
                   constraints:
                     primaryKey: true
                     nullable: false
@@ -22,13 +21,13 @@ databaseChangeLog:
 
               - column:
                   name: owner_id
-                  type: int
+                  type: BIGINT
                   constraints:
                     nullable: false
 
               - column:
                   name: location_id
-                  type: int
+                  type: BIGINT
                   constraints:
                     nullable: false
 

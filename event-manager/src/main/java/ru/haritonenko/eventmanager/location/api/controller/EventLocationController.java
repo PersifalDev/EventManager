@@ -37,7 +37,7 @@ public class EventLocationController {
 
     @GetMapping("/{id}")
     public EventLocationDto getById(
-            @PathVariable Integer id
+            @PathVariable Long id
     ) {
         log.info("Get request for getting location by id: {}", id);
         var foundLocation = locationService.getLocationById(id);
@@ -59,7 +59,7 @@ public class EventLocationController {
 
     @PutMapping("/{id}")
     public EventLocationDto updateLocation(
-            @PathVariable Integer id,
+            @PathVariable Long id,
             @RequestBody @Valid EventLocationUpdateRequestDto locationFromUpdateRequest
     ) {
         log.info("Put request for updating location: {}", locationFromUpdateRequest);
@@ -73,7 +73,7 @@ public class EventLocationController {
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteById(
-            @PathVariable Integer id
+            @PathVariable Long id
     ) {
         log.info("Delete request for deleting location by id: {}", id);
         locationService.deleteLocation(id);

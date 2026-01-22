@@ -19,13 +19,13 @@ import java.util.Map;
 public class KafkaConsumerConfiguration {
 
     @Bean
-    public ConsumerFactory<Integer, EventChangeKafkaMessage> consumerFactory(KafkaProperties kafkaProperties) {
+    public ConsumerFactory<Long, EventChangeKafkaMessage> consumerFactory(KafkaProperties kafkaProperties) {
         Map<String, Object> props = kafkaProperties.buildConsumerProperties();
 
         props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, ErrorHandlingDeserializer.class);
         props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, ErrorHandlingDeserializer.class);
 
-        props.put(ErrorHandlingDeserializer.KEY_DESERIALIZER_CLASS, org.apache.kafka.common.serialization.IntegerDeserializer.class);
+        props.put(ErrorHandlingDeserializer.KEY_DESERIALIZER_CLASS, org.apache.kafka.common.serialization.LongDeserializer.class);
         props.put(ErrorHandlingDeserializer.VALUE_DESERIALIZER_CLASS, JsonDeserializer.class);
 
         props.put(JsonDeserializer.TRUSTED_PACKAGES, "*");
@@ -35,10 +35,10 @@ public class KafkaConsumerConfiguration {
     }
 
     @Bean(name = "containerFactory")
-    public ConcurrentKafkaListenerContainerFactory<Integer, EventChangeKafkaMessage> containerFactory(
-            ConsumerFactory<Integer, EventChangeKafkaMessage> consumerFactory
+    public ConcurrentKafkaListenerContainerFactory<Long, EventChangeKafkaMessage> containerFactory(
+            ConsumerFactory<Long, EventChangeKafkaMessage> consumerFactory
     ) {
-        var factory = new ConcurrentKafkaListenerContainerFactory<Integer, EventChangeKafkaMessage>();
+        var factory = new ConcurrentKafkaListenerContainerFactory<Long, EventChangeKafkaMessage>();
         factory.setConsumerFactory(consumerFactory);
         return factory;
     }

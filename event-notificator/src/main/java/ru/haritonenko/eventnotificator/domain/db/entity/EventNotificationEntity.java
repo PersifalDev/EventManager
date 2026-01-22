@@ -16,13 +16,13 @@ public class EventNotificationEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+    private Long id;
 
     @Column(name = "user_id", nullable = false)
-    private Integer userId;
+    private Long userId;
 
     @Column(name = "event_id", nullable = false)
-    private Integer eventId;
+    private Long eventId;
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;

@@ -25,7 +25,7 @@ public class EventLocationEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @EqualsAndHashCode.Include
-    private Integer id;
+    private Long id;
 
     @NotBlank(message = "Location name can not be blank")
     @Size(min = 1, max = 40, message = "Min name size is 1, max is 40")

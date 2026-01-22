@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
-public interface EventNotificationRepository extends JpaRepository<EventNotificationEntity, Integer> {
+public interface EventNotificationRepository extends JpaRepository<EventNotificationEntity, Long> {
 
     @Query("""
              SELECT n FROM EventNotificationEntity n
@@ -20,7 +20,7 @@ public interface EventNotificationRepository extends JpaRepository<EventNotifica
              ORDER BY n.createdAt DESC 
             """)
     List<EventNotificationEntity> findAllUnredNotificationsByUserId(
-            @Param("userId") Integer id
+            @Param("userId") Long id
     );
 
     @Modifying
@@ -32,8 +32,8 @@ public interface EventNotificationRepository extends JpaRepository<EventNotifica
                   AND n.read = false
             """)
     void markUserNotificationsAsRead(
-            @Param("userId") Integer userId,
-            @Param("ids") List<Integer> ids
+            @Param("userId") Long userId,
+            @Param("ids") List<Long> ids
     );
 
     long deleteByCreatedAtBefore(LocalDateTime thresholdTime);

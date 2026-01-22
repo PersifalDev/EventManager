@@ -14,6 +14,8 @@ spring:
   liquibase:
     enabled: true
     change-log: classpath:db/changelog/changelog-master.yaml
+    default-schema: public
+    liquibase-schema: public
 
   jpa:
     hibernate:
@@ -24,6 +26,7 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
+        default_schema: public
 
   cache:
     type: redis

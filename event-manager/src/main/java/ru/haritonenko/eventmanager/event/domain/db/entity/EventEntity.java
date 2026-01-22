@@ -26,7 +26,7 @@ public class EventEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @EqualsAndHashCode.Include
-    private Integer id;
+    private Long id;
 
     @NotBlank(message = "Event name can not be blank")
     @Size(min = 1, max = 50, message = "Min name size is 1, max is 50")

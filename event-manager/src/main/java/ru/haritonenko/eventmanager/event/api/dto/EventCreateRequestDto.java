@@ -22,6 +22,6 @@ public record EventCreateRequestDto(
         Integer duration,
         @NotNull(message = "Event location id can not be null")
         @Min(value = 1, message = "Min location id is 1")
-        Integer locationId
+        Long locationId
 ) {
 }

@@ -11,9 +11,9 @@ import ru.haritonenko.eventmanager.event.registration.domain.status.EventRegistr
 import java.util.Optional;
 
 @Repository
-public interface EventRegistrationRepository extends JpaRepository<EventRegistrationEntity, Integer> {
+public interface EventRegistrationRepository extends JpaRepository<EventRegistrationEntity, Long> {
 
-    Optional<EventRegistrationEntity> findByUserIdAndEventId(Integer userId, Integer eventId);
+    Optional<EventRegistrationEntity> findByUserIdAndEventId(Long userId, Long eventId);
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("""
@@ -22,8 +22,8 @@ public interface EventRegistrationRepository extends JpaRepository<EventRegistra
             WHERE r.user.id = :userId AND r.event.id = :eventId
             """)
     void updateStatus(
-            @Param("userId") Integer userId,
-            @Param("eventId") Integer eventId,
+            @Param("userId") Long userId,
+            @Param("eventId") Long eventId,
             @Param("status") EventRegistrationStatus status
     );
 
@@ -34,7 +34,7 @@ public interface EventRegistrationRepository extends JpaRepository<EventRegistra
             WHERE r.event.id = :eventId AND r.status = :oldStatus
             """)
     int updateStatusByEventId(
-            @Param("eventId") Integer eventId,
+            @Param("eventId") Long eventId,
             @Param("newStatus") EventRegistrationStatus newStatus,
             @Param("oldStatus") EventRegistrationStatus oldStatus);
 
