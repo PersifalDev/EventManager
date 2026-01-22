@@ -51,7 +51,7 @@ public class CacheConfig {
                 .allowIfSubType("org.springframework.cache.support.")
                 .build();
 
-        mapper.activateDefaultTyping(ptv, ObjectMapper.DefaultTyping.EVERYTHING, JsonTypeInfo.As.PROPERTY);
+        mapper.activateDefaultTyping(ptv, ObjectMapper.DefaultTyping.NON_FINAL, JsonTypeInfo.As.PROPERTY);
         return new GenericJackson2JsonRedisSerializer(mapper);
     }
 
