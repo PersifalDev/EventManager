@@ -3,15 +3,15 @@ services:
     image: postgres:16
     restart: unless-stopped
     ports:
-      - "5435:5432"
+      - "${POSTGRES_EVENT_MANAGER_PORT}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     environment:
-      POSTGRES_USER: event
-      POSTGRES_PASSWORD: manager
-      POSTGRES_DB: events-db
+      POSTGRES_USER: ${POSTGRES_EVENT_MANAGER_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_EVENT_MANAGER_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_EVENT_MANAGER_DB}
     healthcheck:
-      test: pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
       interval: 10s
       timeout: 5s
       start_period: 10s
@@ -21,15 +21,15 @@ services:
     image: postgres:16
     restart: unless-stopped
     ports:
-      - "5436:5432"
+      - "${POSTGRES_EVENT_NOTIFICATOR_PORT}:5432"
     volumes:
       - postgres_notificator_data:/var/lib/postgresql/data
     environment:
-      POSTGRES_USER: event
-      POSTGRES_PASSWORD: notification
-      POSTGRES_DB: eventNotificationdb
+      POSTGRES_USER: ${POSTGRES_EVENT_NOTIFICATOR_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_EVENT_NOTIFICATOR_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_EVENT_NOTIFICATOR_DB}
     healthcheck:
-      test: pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
       interval: 10s
       timeout: 5s
       start_period: 10s
@@ -39,12 +39,12 @@ services:
     image: confluentinc/cp-kafka:8.1.1
     restart: unless-stopped
     ports:
-      - "29092:29092"
-      - "9092:9092"
+      - "${KAFKA_DOCKER_PORT}:29092"
+      - "${KAFKA_HOST_PORT}:9092"
     volumes:
       - kafka_data:/var/lib/kafka/data
     environment:
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:${KAFKA_HOST_PORT}
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT,CONTROLLER:PLAINTEXT
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
@@ -55,35 +55,123 @@ services:
       KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
       KAFKA_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://0.0.0.0:9092,CONTROLLER://kafka:9093
     healthcheck:
-      test: kafka-topics --bootstrap-server localhost:9092 --list
+      test: ["CMD-SHELL", "kafka-topics --bootstrap-server kafka:29092 --list >/dev/null 2>&1 || exit 1"]
       interval: 10s
       timeout: 5s
       start_period: 30s
-      retries: 5
+      retries: 10
     labels:
       amplicode.image: confluent/kafka
+
   event-manager-redis:
     image: redis:8.4.0
     restart: unless-stopped
     ports:
-      - "6379:6379"
+      - "${REDIS_EVENT_MANAGER_PORT}:6379"
     healthcheck:
-      test: redis-cli ping
+      test: ["CMD", "redis-cli", "ping"]
       interval: 10s
       timeout: 5s
       start_period: 10s
       retries: 5
+
   event-notificator-redis:
     image: redis:8.4.0
     restart: unless-stopped
     ports:
-      - "6380:6379"
+      - "${REDIS_EVENT_NOTIFICATOR_PORT}:6379"
     healthcheck:
-      test: redis-cli ping
+      test: ["CMD", "redis-cli", "ping"]
       interval: 10s
       timeout: 5s
       start_period: 10s
       retries: 5
+
+  event-manager:
+    image: event-manager:latest
+    restart: unless-stopped
+    ports:
+      - "${EVENT_MANAGER_PORT}:${EVENT_MANAGER_PORT}"
+    environment:
+      SERVER_PORT: ${EVENT_MANAGER_PORT}
+
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-event-manager:5432/${POSTGRES_EVENT_MANAGER_DB}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_EVENT_MANAGER_USER}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_EVENT_MANAGER_PASSWORD}
+
+      SPRING_DATA_REDIS_HOST: event-manager-redis
+      SPRING_DATA_REDIS_PORT: 6379
+
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
+      JWT_LIFETIME_MS: ${JWT_LIFETIME_MS}
+
+      KAFKA_TOPIC_EVENT_CHANGED: ${KAFKA_TOPIC_EVENT_CHANGED}
+
+      EVENT_MANAGER_DEFAULT_PAGE_SIZE: ${EVENT_MANAGER_DEFAULT_PAGE_SIZE}
+      EVENT_MANAGER_DEFAULT_PAGE_NUMBER: ${EVENT_MANAGER_DEFAULT_PAGE_NUMBER}
+
+      EVENT_MANAGER_CACHE_DEFAULT_TTL: ${EVENT_MANAGER_CACHE_DEFAULT_TTL}
+      EVENT_MANAGER_CACHE_EVENTS_TTL: ${EVENT_MANAGER_CACHE_EVENTS_TTL}
+      EVENT_MANAGER_CACHE_LOCATIONS_TTL: ${EVENT_MANAGER_CACHE_LOCATIONS_TTL}
+      EVENT_MANAGER_CACHE_REGISTRATIONS_TTL: ${EVENT_MANAGER_CACHE_REGISTRATIONS_TTL}
+      EVENT_MANAGER_CACHE_USERS_TTL: ${EVENT_MANAGER_CACHE_USERS_TTL}
+      EVENT_MANAGER_CACHE_USER_BOOKED_EVENTS_TTL: ${EVENT_MANAGER_CACHE_USER_BOOKED_EVENTS_TTL}
+      EVENT_MANAGER_CACHE_USER_CREATED_EVENTS_TTL: ${EVENT_MANAGER_CACHE_USER_CREATED_EVENTS_TTL}
+
+      EVENT_MANAGER_SCHEDULER_ENABLED: ${EVENT_MANAGER_SCHEDULER_ENABLED}
+      EVENT_MANAGER_EVENT_STATUS_FIXED_DELAY_MS: ${EVENT_MANAGER_EVENT_STATUS_FIXED_DELAY_MS}
+    depends_on:
+      postgres-event-manager:
+        condition: service_healthy
+      event-manager-redis:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+
+  event-notificator:
+    image: event-notificator:latest
+    restart: unless-stopped
+    ports:
+      - "${EVENT_NOTIFICATOR_PORT}:${EVENT_NOTIFICATOR_PORT}"
+    environment:
+      SERVER_PORT: ${EVENT_NOTIFICATOR_PORT}
+
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-event-notificator:5432/${POSTGRES_EVENT_NOTIFICATOR_DB}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_EVENT_NOTIFICATOR_USER}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_EVENT_NOTIFICATOR_PASSWORD}
+
+      SPRING_DATA_REDIS_HOST: event-notificator-redis
+      SPRING_DATA_REDIS_PORT: 6379
+
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
+      JWT_LIFETIME_MS: ${JWT_LIFETIME_MS}
+
+      KAFKA_TOPIC_EVENT_CHANGED: ${KAFKA_TOPIC_EVENT_CHANGED}
+
+      KAFKA_CONSUMER_GROUP_ID: ${KAFKA_CONSUMER_GROUP_ID}
+      KAFKA_JSON_DEFAULT_TYPE: ${KAFKA_JSON_DEFAULT_TYPE}
+      KAFKA_TRUSTED_PACKAGES: ${KAFKA_TRUSTED_PACKAGES}
+
+      EVENT_NOTIFICATOR_DEFAULT_PAGE_SIZE: ${EVENT_NOTIFICATOR_DEFAULT_PAGE_SIZE}
+      EVENT_NOTIFICATOR_DEFAULT_PAGE_NUMBER: ${EVENT_NOTIFICATOR_DEFAULT_PAGE_NUMBER}
+
+      EVENT_NOTIFICATOR_CACHE_DEFAULT_TTL: ${EVENT_NOTIFICATOR_CACHE_DEFAULT_TTL}
+      EVENT_NOTIFICATOR_CACHE_UNREAD_NOTIFICATIONS_TTL: ${EVENT_NOTIFICATOR_CACHE_UNREAD_NOTIFICATIONS_TTL}
+
+      EVENT_NOTIFICATOR_SCHEDULER_ENABLED: ${EVENT_NOTIFICATOR_SCHEDULER_ENABLED}
+      EVENT_NOTIFICATOR_NOTIFICATIONS_CLEANUP_CRON: ${EVENT_NOTIFICATOR_NOTIFICATIONS_CLEANUP_CRON}
+      EVENT_NOTIFICATOR_NOTIFICATIONS_TTL_DAYS: ${EVENT_NOTIFICATOR_NOTIFICATIONS_TTL_DAYS}
+    depends_on:
+      postgres-event-notificator:
+        condition: service_healthy
+      event-notificator-redis:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
 
 volumes:
   postgres_data:

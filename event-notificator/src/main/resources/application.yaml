@@ -1,16 +1,15 @@
 server:
-  port: 8083
+  port: ${EVENT_NOTIFICATOR_PORT:8083}
 
 spring:
   application:
     name: event-notificator
 
   datasource:
-    url: jdbc:postgresql://localhost:5436/eventNotificationdb
-    username: event
-    password: notification
+    url: ${EVENT_NOTIFICATOR_DB_URL:jdbc:postgresql://localhost:${POSTGRES_EVENT_NOTIFICATOR_PORT:5436}/${POSTGRES_EVENT_NOTIFICATOR_DB:eventNotificationdb}}
+    username: ${POSTGRES_EVENT_NOTIFICATOR_USER:event}
+    password: ${POSTGRES_EVENT_NOTIFICATOR_PASSWORD:notification}
     driver-class-name: org.postgresql.Driver
-
 
   liquibase:
     enabled: true
@@ -34,45 +33,44 @@ spring:
     type: redis
   data:
     redis:
-      host: localhost
-      port: 6380
+      host: ${EVENT_NOTIFICATOR_REDIS_HOST:localhost}
+      port: ${EVENT_NOTIFICATOR_REDIS_PORT:${REDIS_EVENT_NOTIFICATOR_PORT:6380}}
       timeout: 2s
 
   kafka:
     consumer:
-      group-id: event-notificator-group
+      group-id: ${KAFKA_CONSUMER_GROUP_ID:event-notificator-group}
       key-deserializer: org.springframework.kafka.support.serializer.ErrorHandlingDeserializer
       value-deserializer: org.springframework.kafka.support.serializer.ErrorHandlingDeserializer
       properties:
         spring.deserializer.key.delegate.class: org.apache.kafka.common.serialization.IntegerDeserializer
         spring.deserializer.value.delegate.class: org.springframework.kafka.support.serializer.JsonDeserializer
-        spring.json.trusted.packages: "*"
-        spring.json.value.default.type: ru.haritonenko.commonlibs.dto.notification.EventChangeKafkaMessage
+        spring.json.trusted.packages: ${KAFKA_TRUSTED_PACKAGES:*}
+        spring.json.value.default.type: ${KAFKA_JSON_DEFAULT_TYPE:ru.haritonenko.commonlibs.dto.notification.EventChangeKafkaMessage}
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:${KAFKA_HOST_PORT:9092}}
 
-kafka-topic: event-changed-topic
+kafka-topic: ${KAFKA_TOPIC_EVENT_CHANGED:event-changed-topic}
 
 app:
   location:
-    default-page-size: 5
-    default-page-number: 0
+    default-page-size: ${EVENT_NOTIFICATOR_DEFAULT_PAGE_SIZE:5}
+    default-page-number: ${EVENT_NOTIFICATOR_DEFAULT_PAGE_NUMBER:0}
 
   cache:
-    default-ttl: 30s
-    unread-notifications-ttl: 30s
+    default-ttl: ${EVENT_NOTIFICATOR_CACHE_DEFAULT_TTL:30s}
+    unread-notifications-ttl: ${EVENT_NOTIFICATOR_CACHE_UNREAD_NOTIFICATIONS_TTL:30s}
 
 jwt:
-  secret-key: BC394D294B33EF525867C6B171EFBC77074D28CCF485F48280B62AE7DF911F38
-  lifetime: 86400000
-
+  secret-key: ${JWT_SECRET_KEY}
+  lifetime: ${JWT_LIFETIME_MS:86400000}
 
 springdoc:
   swagger-ui:
     url: /event-notificator-openapi.yaml
     path: /swagger-ui.html
 
-
 scheduler:
-  enabled: true
+  enabled: ${EVENT_NOTIFICATOR_SCHEDULER_ENABLED:true}
   notifications:
-    cleanup-cron: "0 */10 * * * *"
-    ttl-days: 7
+    cleanup-cron: ${EVENT_NOTIFICATOR_NOTIFICATIONS_CLEANUP_CRON:0 */10 * * * *}
+    ttl-days: ${EVENT_NOTIFICATOR_NOTIFICATIONS_TTL_DAYS:7}

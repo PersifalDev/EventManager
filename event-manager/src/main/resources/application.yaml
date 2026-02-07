@@ -1,14 +1,14 @@
 server:
-  port: 8082
+  port: ${EVENT_MANAGER_PORT:8082}
 
 spring:
   application:
     name: EventManager
 
   datasource:
-    url: jdbc:postgresql://localhost:5435/eventdb
-    username: event
-    password: manager
+    url: ${EVENT_MANAGER_DB_URL:jdbc:postgresql://localhost:${POSTGRES_EVENT_MANAGER_PORT:5435}/${POSTGRES_EVENT_MANAGER_DB:eventdb}}
+    username: ${POSTGRES_EVENT_MANAGER_USER:event}
+    password: ${POSTGRES_EVENT_MANAGER_PASSWORD:manager}
     driver-class-name: org.postgresql.Driver
 
   liquibase:
@@ -32,12 +32,12 @@ spring:
     type: redis
   data:
     redis:
-      host: localhost
-      port: 6379
+      host: ${EVENT_MANAGER_REDIS_HOST:localhost}
+      port: ${EVENT_MANAGER_REDIS_PORT:${REDIS_EVENT_MANAGER_PORT:6379}}
       timeout: 2s
 
   kafka:
-    bootstrap-servers: localhost:9092
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:${KAFKA_HOST_PORT:9092}}
 
 springdoc:
   swagger-ui:
@@ -50,26 +50,26 @@ logging:
     org.hibernate.orm.jdbc.bind: trace
 
 jwt:
-  secret-key: BC394D294B33EF525867C6B171EFBC77074D28CCF485F48280B62AE7DF911F38
-  lifetime: 86400000
+  secret-key: ${JWT_SECRET_KEY}
+  lifetime: ${JWT_LIFETIME_MS:86400000}
 
 app:
   location:
-    default-page-size: 5
-    default-page-number: 0
+    default-page-size: ${EVENT_MANAGER_DEFAULT_PAGE_SIZE:5}
+    default-page-number: ${EVENT_MANAGER_DEFAULT_PAGE_NUMBER:0}
 
   cache:
-    default-ttl: 30s
-    events-ttl: 30s
-    locations-ttl: 30s
-    registrations-ttl: 30s
-    users-ttl: 30s
-    user-booked-events-ttl: 20s
-    user-created-events-ttl: 30s
+    default-ttl: ${EVENT_MANAGER_CACHE_DEFAULT_TTL:30s}
+    events-ttl: ${EVENT_MANAGER_CACHE_EVENTS_TTL:30s}
+    locations-ttl: ${EVENT_MANAGER_CACHE_LOCATIONS_TTL:30s}
+    registrations-ttl: ${EVENT_MANAGER_CACHE_REGISTRATIONS_TTL:30s}
+    users-ttl: ${EVENT_MANAGER_CACHE_USERS_TTL:30s}
+    user-booked-events-ttl: ${EVENT_MANAGER_CACHE_USER_BOOKED_EVENTS_TTL:20s}
+    user-created-events-ttl: ${EVENT_MANAGER_CACHE_USER_CREATED_EVENTS_TTL:30s}
 
 scheduler:
-  enabled: true
+  enabled: ${EVENT_MANAGER_SCHEDULER_ENABLED:true}
   event-status:
-    fixed-delay-ms: 60000
+    fixed-delay-ms: ${EVENT_MANAGER_EVENT_STATUS_FIXED_DELAY_MS:60000}
 
-kafka-topic: event-changed-topic
+kafka-topic: ${KAFKA_TOPIC_EVENT_CHANGED:event-changed-topic}

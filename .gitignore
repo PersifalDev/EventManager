@@ -1,9 +1,21 @@
+.env
 
 HELP.md
-target/
-.mvn/wrapper/maven-wrapper.jar
-!**/src/main/**/target/
-!**/src/test/**/target/
+
+### Maven ###
+**/target/
+!.mvn/wrapper/maven-wrapper.jar
+
+### Gradle ###
+.gradle/
+**/build/
+
+### IntelliJ IDEA ###
+.idea/
+*.iml
+*.ipr
+*.iws
+out/
 
 ### STS ###
 .apt_generated
@@ -14,39 +26,15 @@ target/
 .springBeans
 .sts4-cache
 
-### IntelliJ IDEA ###
-.idea
-*.iws
-*.iml
-*.ipr
-
 ### NetBeans ###
 /nbproject/private/
 /nbbuild/
 /dist/
 /nbdist/
 /.nb-gradle/
-build/
-!**/src/main/**/build/
-!**/src/test/**/build/
 
 ### VS Code ###
 .vscode/
-=======
-### IntelliJ IDEA ###
-.idea/
-*.iml
-*.ipr
-*.iws
-out/
-
-### Maven ###
-**/target/
-!.mvn/wrapper/maven-wrapper.jar
-
-### Gradle (если вдруг) ###
-.gradle/
-**/build/
 
 ### Logs ###
 *.log
@@ -58,4 +46,3 @@ Thumbs.db
 ### Tools / local stuff ###
 .local/
 amplicode.xml
-
