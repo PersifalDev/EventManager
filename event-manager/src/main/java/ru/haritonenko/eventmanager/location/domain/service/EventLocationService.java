@@ -17,10 +17,7 @@ import ru.haritonenko.eventmanager.location.domain.db.entity.EventLocationEntity
 import ru.haritonenko.eventmanager.location.domain.db.repository.EventLocationRepository;
 import ru.haritonenko.eventmanager.location.domain.mapper.EventLocationEntityMapper;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -76,12 +73,7 @@ public class EventLocationService {
     @Transactional(readOnly = true)
     public EventLocation getLocationById(Long id) {
         log.info("Getting location by id: {}", id);
-        var foundLocation = locationRepository.findById(id)
-                .orElseThrow(() -> {
-                    log.warn("Error while searching for location by id: {}", id);
-                    return new LocationNotFoundException(
-                            "No found location by id = %s".formatted(id));
-                });
+        var foundLocation = getLocationByIdOrThrow(id);
         log.info("Location was successfully found by id: {}", id);
         return mapper.toDomain(foundLocation);
     }
@@ -90,17 +82,16 @@ public class EventLocationService {
     @Transactional
     public EventLocation updateLocation(Long id, EventLocation eventLocationToUpdate) {
         log.info("Updating location with id: {}", id);
-        checkLocationIsExistedByIdOrThrow(id);
+        var location = getLocationByIdOrThrow(id);
         checkNewLocationCapacityMoreOrEqualsOldOrThrow(id, eventLocationToUpdate);
-        locationRepository.updateLocation(
-                id,
-                eventLocationToUpdate.name(),
-                eventLocationToUpdate.address(),
-                eventLocationToUpdate.capacity(),
-                eventLocationToUpdate.description()
-        );
+
+        location.setName(eventLocationToUpdate.name());
+        location.setAddress(eventLocationToUpdate.address());
+        location.setCapacity(eventLocationToUpdate.capacity());
+        location.setDescription(eventLocationToUpdate.description());
         log.info("Location with id: {} was successfully updated", id);
-        return mapper.toDomain(locationRepository.findById(id).orElseThrow());
+
+        return mapper.toDomain(location);
     }
 
     @CacheEvict(value = "locations", key = "#id")
@@ -110,6 +101,15 @@ public class EventLocationService {
         checkLocationIsExistedByIdOrThrow(id);
         locationRepository.deleteById(id);
         log.info("Location was successfully deleted by id: {}", id);
+    }
+
+    private EventLocationEntity getLocationByIdOrThrow(Long id) {
+        return locationRepository.findById(id)
+                .orElseThrow(() -> {
+                    log.warn("Error while searching for location by id: {}", id);
+                    return new LocationNotFoundException(
+                            "No found location by id = %s".formatted(id));
+                });
     }
 
     private void checkLocationIsExistedByIdOrThrow(

@@ -129,10 +129,16 @@ public class EventService {
 
         var eventBeforeChangesSnapshot = getEventOldVersionSnapshot(event);
 
+        event.setName(eventToUpdate.name());
+        event.setMaxPlaces(eventToUpdate.maxPlaces());
+        event.setDate(eventToUpdate.date());
+        event.setCost(eventToUpdate.cost());
+        event.setDuration(eventToUpdate.duration());
+
         if (!oldLocation.getId().equals(newLocation.getId())) {
             oldLocation.getEvents().remove(event);
-            event.setLocation(newLocation);
             newLocation.getEvents().add(event);
+            event.setLocation(newLocation);
         }
 
         eventUpdateMapper.updateEntity(event, eventToUpdate);

@@ -23,21 +23,4 @@ public interface EventLocationRepository extends JpaRepository<EventLocationEnti
             @Param("address") String address,
             Pageable pageable
     );
-
-    @Modifying(clearAutomatically = true, flushAutomatically = true)
-    @Query("""
-                UPDATE EventLocationEntity l
-                SET l.name = :name,
-                    l.address = :address,
-                    l.capacity = :capacity,
-                    l.description = :description
-               WHERE l.id = :id
-            """)
-    void updateLocation(
-            @Param("id") Long id,
-            @Param("name") String name,
-            @Param("address") String address,
-            @Param("capacity") Integer capacity,
-            @Param("description") String description
-    );
 }
