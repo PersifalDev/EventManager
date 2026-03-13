@@ -31,10 +31,11 @@ spring:
 
   cache:
     type: redis
+
   data:
     redis:
       host: ${EVENT_NOTIFICATOR_REDIS_HOST:localhost}
-      port: ${EVENT_NOTIFICATOR_REDIS_PORT:${REDIS_EVENT_NOTIFICATOR_PORT:6380}}
+      port: ${EVENT_NOTIFICATOR_REDIS_PORT:6380}
       timeout: 2s
 
   kafka:

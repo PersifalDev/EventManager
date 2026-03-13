@@ -55,7 +55,6 @@ public class EventLocationService {
                 )
                 .stream()
                 .map(mapper::toDomain)
-                .sorted(Comparator.comparing(EventLocation::id))
                 .collect(Collectors.toList());
     }
 

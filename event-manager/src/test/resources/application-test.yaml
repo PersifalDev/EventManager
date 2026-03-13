@@ -1,0 +1,12 @@
+spring:
+  cache:
+    type: simple
+
+  kafka:
+    bootstrap-servers: localhost:9099
+
+jwt:
+  secret-key: ${JWT_SECRET_KEY:BC394D294B33EF525867C6B171EFBC77074D28CCF485F48280B62AE7DF911F38}
+
+scheduler:
+  enabled: false

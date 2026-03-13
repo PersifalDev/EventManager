@@ -2,7 +2,9 @@ package ru.haritonenko.eventmanager.location.api.dto.filter;
 
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Size;
+import lombok.Builder;
 
+@Builder
 public record EventLocationSearchFilter(
         @Size(min = 1, max = 40, message = "Min name size is 1, max is 40")
         String name,

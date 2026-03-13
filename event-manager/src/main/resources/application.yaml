@@ -30,6 +30,7 @@ spring:
 
   cache:
     type: redis
+
   data:
     redis:
       host: ${EVENT_MANAGER_REDIS_HOST:localhost}

@@ -1,7 +1,6 @@
 package ru.haritonenko.eventmanager.event.api.dto;
 
 import jakarta.validation.constraints.*;
-import lombok.Builder;
 import ru.haritonenko.eventmanager.event.domain.custom.validation.annotation.NotPastDateTime;
 
 public record EventCreateRequestDto(
