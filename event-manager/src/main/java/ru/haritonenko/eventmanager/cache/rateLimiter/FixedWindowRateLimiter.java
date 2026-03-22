@@ -1,6 +1,7 @@
 package ru.haritonenko.eventmanager.cache.rateLimiter;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Profile;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -8,6 +9,7 @@ import java.time.Duration;
 
 import static java.util.Objects.nonNull;
 
+@Profile("dev")
 @Service
 @RequiredArgsConstructor
 public class FixedWindowRateLimiter {

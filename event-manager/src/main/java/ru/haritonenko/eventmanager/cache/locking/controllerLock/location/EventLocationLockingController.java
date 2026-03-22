@@ -3,6 +3,7 @@ package ru.haritonenko.eventmanager.cache.locking.controllerLock.location;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
@@ -16,6 +17,7 @@ import java.time.Duration;
 
 import static java.util.Objects.isNull;
 
+@Profile("dev")
 @Slf4j
 @RestController
 @RequestMapping("/locations/lock")

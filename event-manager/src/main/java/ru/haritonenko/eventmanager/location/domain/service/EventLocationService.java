@@ -95,7 +95,7 @@ public class EventLocationService {
 
     @CacheEvict(value = "locations", key = "#id")
     @Transactional
-    public void deleteLocation(Long id) {
+    public void deleteLocationById(Long id) {
         log.info("Deleting location by id: {}", id);
         checkLocationIsExistedByIdOrThrow(id);
         locationRepository.deleteById(id);

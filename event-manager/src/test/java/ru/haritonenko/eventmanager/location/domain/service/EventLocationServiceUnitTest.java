@@ -18,4 +18,7 @@ public class EventLocationServiceUnitTest {
 
     @InjectMocks
     private EventLocationService eventLocationService;
+
+
+
 }

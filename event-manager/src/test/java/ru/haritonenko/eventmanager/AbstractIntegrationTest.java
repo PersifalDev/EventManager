@@ -30,4 +30,6 @@ public abstract class AbstractIntegrationTest {
         registry.add("spring.datasource.driver-class-name", POSTGRES_CONTAINER::getDriverClassName);
     }
 
+
+
 }

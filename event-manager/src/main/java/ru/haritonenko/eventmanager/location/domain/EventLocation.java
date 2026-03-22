@@ -1,7 +1,10 @@
 package ru.haritonenko.eventmanager.location.domain;
 
+import lombok.Builder;
+
+@Builder(toBuilder = true)
 public record EventLocation(
-        Integer id,
+        Long id,
         String name,
         String address,
         Integer capacity,

@@ -39,6 +39,8 @@ class EventLocationRepositoryTest extends AbstractJpaTest {
                 .build();
     }
 
+    /**happy paths**/
+
     @Test
     void shouldSaveLocationAndGenerateId() {
 
@@ -317,6 +319,8 @@ class EventLocationRepositoryTest extends AbstractJpaTest {
 
     }
 
+
+    /**helpers methods **/
 
     private EventLocationEntity saveDummyLocation(EventLocationEntity location) {
         return eventLocationRepository.save(location);

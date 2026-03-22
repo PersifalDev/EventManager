@@ -5,8 +5,19 @@ spring:
   kafka:
     bootstrap-servers: localhost:9099
 
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      timeout: 2s
+
+logging:
+  level:
+    root: info
+
 jwt:
   secret-key: ${JWT_SECRET_KEY:BC394D294B33EF525867C6B171EFBC77074D28CCF485F48280B62AE7DF911F38}
+  lifetime: ${JWT_LIFETIME_MS:86400000}
 
 scheduler:
   enabled: false

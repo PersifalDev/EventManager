@@ -2,6 +2,7 @@ package ru.haritonenko.eventmanager.cache.locking.manager;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Profile;
 import org.springframework.data.redis.connection.ReturnType;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
@@ -12,6 +13,7 @@ import java.util.UUID;
 
 import static java.util.Objects.nonNull;
 
+@Profile("dev")
 @Slf4j
 @Service
 @RequiredArgsConstructor

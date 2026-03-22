@@ -76,6 +76,6 @@ public class EventLocationController {
             @PathVariable Long id
     ) {
         log.info("Delete request for deleting location by id: {}", id);
-        locationService.deleteLocation(id);
+        locationService.deleteLocationById(id);
     }
 }
