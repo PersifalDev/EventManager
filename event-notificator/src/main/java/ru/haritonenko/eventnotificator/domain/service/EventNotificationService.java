@@ -34,9 +34,6 @@ public class EventNotificationService {
 
     private static final String CACHE_KEY_PREFIX = "unread-notifications:";
 
-    @Value("${app.cache.unread-notifications-ttl:30s}")
-    private Duration cacheTtl;
-
     private final EventNotificationRepository notificationRepository;
     private final EventNotificationEntityMapper mapper;
     private final RedisTemplate<String, EventNotificationEntity> redisTemplate;
@@ -47,24 +44,30 @@ public class EventNotificationService {
     @Value("${app.location.default-page-number}")
     private int defaultPageNumber;
 
+    @Value("${app.cache.unread-notifications-ttl:30s}")
+    private Duration cacheTtl;
+
     @Transactional(readOnly = true)
     public List<EventNotification> findUnreadNotificationsForUser(
             AuthUser user,
             EventNotificationPageFilter pageFilter
     ) {
-        log.info("Searching for unread user notification");
+        log.info("Searching unread notifications for user");
 
         if (isNull(user)) {
-            log.warn("Error while authentication");
+            log.warn("Failed to search unread notifications: authentication not present");
             throw new IllegalStateException("Authentication not present");
         }
         if (isNull(pageFilter)) {
+            log.info("Page filter is null, using default pagination for user id: {}", user.id());
             pageFilter = new EventNotificationPageFilter(null, null);
         }
 
         Pageable pageable = getPageable(pageFilter);
         int pageNumber = pageable.getPageNumber();
         int pageSize = pageable.getPageSize();
+
+        log.info("Searching unread notifications for user id: {} with page: {}, size: {}", user.id(), pageNumber, pageSize);
 
         String cacheKey = CACHE_KEY_PREFIX + user.id();
 
@@ -74,7 +77,7 @@ public class EventNotificationService {
         List<EventNotificationEntity> cachedNotificationList = redisTemplate.opsForList().range(cacheKey, start, end);
 
         if (nonNull(cachedNotificationList) && !cachedNotificationList.isEmpty()) {
-            log.info("Unread notification list was found in cache for user with id: {}", user.id());
+            log.info("Unread notifications found in cache for user id: {}, returned count: {}", user.id(), cachedNotificationList.size());
             return cachedNotificationList.stream()
                     .map(mapper::toDomain)
                     .sorted(Comparator.comparing(EventNotification::id))
@@ -83,11 +86,11 @@ public class EventNotificationService {
 
         Long cachedSize = redisTemplate.opsForList().size(cacheKey);
         if (nonNull(cachedSize) && cachedSize > 0) {
-            log.info("Unread notification list exists in cache but requested page is empty for user with id: {}", user.id());
+            log.info("Unread notifications exist in cache, but requested page is empty for user id: {}", user.id());
             return List.of();
         }
 
-        log.info("Unread notification list not found in cache for user with id: {}", user.id());
+        log.info("Unread notifications not found in cache for user id: {}, loading from database", user.id());
 
         List<EventNotificationEntity> notificationListFromDb = notificationRepository.findAllUnredNotificationsByUserId(user.id());
         if (nonNull(notificationListFromDb) && !notificationListFromDb.isEmpty()) {
@@ -95,6 +98,8 @@ public class EventNotificationService {
                     .stream()
                     .sorted(Comparator.comparing(EventNotificationEntity::getId))
                     .toList();
+
+            log.info("Loaded {} unread notifications from database for user id: {}", notificationListFromDb.size(), user.id());
 
             redisTemplate.delete(cacheKey);
             redisTemplate.opsForList().rightPushAll(cacheKey, notificationListFromDb);
@@ -105,38 +110,48 @@ public class EventNotificationService {
                     (int) Math.min(end + 1, notificationListFromDb.size())
             );
 
-            log.info("Unread notification list cached for user with id: {}", user.id());
+            log.info("Unread notifications cached for user id: {}, returned count: {}", user.id(), notificationListFromDbPage.size());
 
             return notificationListFromDbPage.stream()
                     .map(mapper::toDomain)
                     .collect(Collectors.toList());
         }
 
+        log.info("No unread notifications found for user id: {}", user.id());
         return List.of();
     }
 
     @Transactional
     public void markNotificationsAsRead(AuthUser user, List<Long> notificationIds) {
+        log.info("Marking notifications as read");
+
         if (isNull(user)) {
-            log.warn("Error while user authentication");
+            log.warn("Failed to mark notifications as read: authentication not present");
             throw new IllegalStateException("Authentication not present");
         }
         if (isNull(notificationIds) || notificationIds.isEmpty()) {
+            log.info("No notification ids provided to mark as read for user id: {}", user.id());
             return;
         }
 
+        log.info("Marking {} notifications as read for user id: {}", notificationIds.size(), user.id());
         notificationRepository.markUserNotificationsAsRead(user.id(), notificationIds);
 
         String cacheKey = CACHE_KEY_PREFIX + user.id();
         redisTemplate.delete(cacheKey);
-        log.info("Cache invalidated for marked notifications as read for user with id:{}", user.id());
+        log.info("Unread notifications cache invalidated for user id: {}", user.id());
     }
 
     @Transactional
     public void saveNotificationsFromKafka(EventChangeKafkaMessage message) {
+        log.info("Saving notifications from Kafka message");
+
         if (isNull(message) || isNull(message.users()) || message.users().isEmpty()) {
+            log.warn("Skipping Kafka notification processing: message is null or contains no users");
             return;
         }
+
+        log.info("Processing Kafka notification for event id: {} and users count: {}", message.eventId(), message.users().size());
 
         String text = buildMessageText(message);
 
@@ -144,6 +159,8 @@ public class EventNotificationService {
                 .filter(Objects::nonNull)
                 .distinct()
                 .toList();
+
+        log.info("Prepared notification text for event id: {}. Unique users count: {}", message.eventId(), userIds.size());
 
         List<EventNotificationEntity> notificationEntities = userIds.stream()
                 .map(userId -> EventNotificationEntity.builder()
@@ -157,15 +174,18 @@ public class EventNotificationService {
                 .toList();
 
         notificationRepository.saveAll(notificationEntities);
+        log.info("Saved {} notifications for event id: {}", notificationEntities.size(), message.eventId());
 
         for (Long userId : userIds) {
             String cacheKey = CACHE_KEY_PREFIX + userId;
             redisTemplate.delete(cacheKey);
-            log.info("Notifications cache invalidated for user with id:{}", userId);
+            log.info("Unread notifications cache invalidated for user id: {}", userId);
         }
     }
 
     private String buildMessageText(EventChangeKafkaMessage message) {
+        log.info("Building notification message text for event id: {}", message.eventId());
+
         List<String> parts = new ArrayList<>();
 
         addChange(parts, "name", message.name());
@@ -178,8 +198,11 @@ public class EventNotificationService {
 
         String title = "Event " + message.eventId() + " changed";
         if (parts.isEmpty()) {
+            log.info("No field changes found for event id: {}, using default notification title", message.eventId());
             return title;
         }
+
+        log.info("Built notification message text for event id: {} with {} changed fields", message.eventId(), parts.size());
         return title + ": " + String.join(", ", parts);
     }
 
@@ -188,6 +211,7 @@ public class EventNotificationService {
             return;
         }
         if (nonNull(change.oldField()) || nonNull(change.newField())) {
+            log.info("Detected change for field '{}': [{} -> {}]", field, change.oldField(), change.newField());
             parts.add(field + " [" + change.oldField() + " -> " + change.newField() + "]");
         }
     }
@@ -195,6 +219,7 @@ public class EventNotificationService {
     private Pageable getPageable(EventNotificationPageFilter pageFilter) {
         int pageSize = Objects.nonNull(pageFilter.pageSize()) ? pageFilter.pageSize() : defaultPageSize;
         int pageNumber = Objects.nonNull(pageFilter.pageNumber()) ? pageFilter.pageNumber() : defaultPageNumber;
+        log.info("Resolved pageable parameters: page={}, size={}", pageNumber, pageSize);
         return Pageable.ofSize(pageSize).withPage(pageNumber);
     }
 }

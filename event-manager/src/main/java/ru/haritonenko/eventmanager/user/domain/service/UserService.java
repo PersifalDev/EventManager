@@ -15,6 +15,8 @@ import ru.haritonenko.eventmanager.user.domain.exception.UserAlreadyRegisteredEx
 import ru.haritonenko.eventmanager.user.domain.exception.UserNotFoundException;
 import ru.haritonenko.eventmanager.user.domain.mapper.UserEntityMapper;
 
+import static java.util.Objects.isNull;
+
 @Service
 @Slf4j
 @RequiredArgsConstructor
@@ -43,15 +45,23 @@ public class UserService {
     })
     @Transactional
     public User register(UserRegistration userFromRegistration) {
-        log.info("User registration started");
+
+        if(isNull(userFromRegistration)){
+            log.warn("Registration failed: registration payload is null");
+            throw new IllegalArgumentException("Registration can't be null");
+        }
+
+        log.info("User registration started for login: {}", userFromRegistration.login());
+
         if (userRepository.existsByLogin(userFromRegistration.login())) {
-            log.warn("Error while register user");
+            log.warn("Error while registering user");
             throw new UserAlreadyRegisteredException("This user has already registered");
         }
         var hashedPass = passwordEncoder.encode(userFromRegistration.password());
         var userToSave = mapper.toEntity(userFromRegistration, hashedPass);
         var savedUserEntity = userRepository.save(userToSave);
-        log.info("User has successfully registered");
+        log.info("User successfully registered with id: {}, login: {}",
+                savedUserEntity.getId(), savedUserEntity.getLogin());
         return mapper.toDomain(savedUserEntity);
     }
 

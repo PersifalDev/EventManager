@@ -32,12 +32,12 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorMessageResponse> handleValidationException(MethodArgumentNotValidException ex) {
-        log.warn("Got ValidationException", ex);
         String detailedMessage = ex.getBindingResult()
                 .getFieldErrors()
                 .stream()
                 .map(error -> (error.getField() + ": " + error.getDefaultMessage()))
                 .collect(Collectors.joining(","));
+        log.warn("Request body validation failed: {}", detailedMessage, ex);
         var errorDto = getErrorMessageResponse("Validation Error",
                 detailedMessage);
 
@@ -50,7 +50,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorMessageResponse> handleNoFoundLocationException(
             LocationNotFoundException ex
     ) {
-        log.warn("Got NoFoundLocationException", ex);
+        log.warn("Location not found: {}", ex.getMessage(), ex);
         var errorDto = getErrorMessageResponse("Location search error",
                 ex.getMessage());
         return ResponseEntity.
@@ -62,7 +62,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorMessageResponse> handleNoFoundUserException(
             UserNotFoundException ex
     ) {
-        log.warn("Got NoFoundUserException", ex);
+        log.warn("User not found: {}", ex.getMessage(), ex);
         var errorDto = getErrorMessageResponse("User search error",
                 ex.getMessage());
         return ResponseEntity.
@@ -74,7 +74,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorMessageResponse> handleUserAlreadyRegisteredException(
             UserAlreadyRegisteredException ex
     ) {
-        log.warn("Got AlreadyRegisteredUserException", ex);
+        log.warn("User registration failed: {}", ex.getMessage(), ex);
         var errorDto = getErrorMessageResponse("User registration error",
                 ex.getMessage());
         return ResponseEntity.
@@ -86,7 +86,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorMessageResponse> handleAuthorizationDeniedException(
             AuthorizationDeniedException ex
     ) {
-        log.error("Got AuthorizationDeniedException", ex);
+        log.warn("Access denied: {}", ex.getMessage(), ex);
         var errorDto = getErrorMessageResponse("Forbidden",
                 ex.getMessage());
         return ResponseEntity
@@ -98,7 +98,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorMessageResponse> handleDateTimeParseException(
             DateTimeParseException ex
     ) {
-        log.warn("Got DateTimeParseException", ex);
+        log.warn("Date time parsing failed: {}", ex.getMessage(), ex);
         var errorDto = getErrorMessageResponse("Error while parsing date time",
                 ex.getMessage());
         return ResponseEntity
@@ -110,7 +110,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorMessageResponse> handleEventNotFoundException(
             EventNotFoundException ex
     ) {
-        log.warn("Got EventNotFoundException", ex);
+        log.warn("Event not found: {}", ex.getMessage(), ex);
         var errorDto = getErrorMessageResponse("Event search error",
                 ex.getMessage());
         return ResponseEntity
@@ -122,7 +122,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorMessageResponse> handleIllegalArgumentException(
             IllegalArgumentException ex
     ) {
-        log.warn("Got IllegalArgumentException", ex);
+        log.warn("Invalid method argument: {}", ex.getMessage(), ex);
         var errorDto = getErrorMessageResponse("Illegal argument error",
                 ex.getMessage());
         return ResponseEntity.
@@ -134,7 +134,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorMessageResponse> handleEventPlacesOverflowException(
             EventPlacesOverflowException ex
     ) {
-        log.warn("Got EventPlacesOverflowException", ex);
+        log.warn("Event places overflow: {}", ex.getMessage(), ex);
         var errorDto = getErrorMessageResponse("Error while booking event place",
                 ex.getMessage());
         return ResponseEntity.
@@ -146,7 +146,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorMessageResponse> handleUserAlreadyRegisteredOnEventException(
             UserAlreadyRegisteredOnEventException ex
     ) {
-        log.warn("Got UserAlreadyRegisteredOnEventException", ex);
+        log.warn("User is already registered on event: {}", ex.getMessage(), ex);
         var errorDto = getErrorMessageResponse("Error while register on event",
                 ex.getMessage());
         return ResponseEntity.
@@ -158,7 +158,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorMessageResponse> handleEventCountPlacesUpdateException(
             EventCountPlacesUpdateException ex
     ) {
-        log.warn("Got EventCountPlacesUpdateException", ex);
+        log.warn("Event places update validation failed: {}", ex.getMessage(), ex);
         var errorDto = getErrorMessageResponse("Error while matching location and event places count",
                 ex.getMessage());
         return ResponseEntity.
@@ -170,7 +170,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorMessageResponse> handleUserBookedEventException(
             UserBookedEventException ex
     ) {
-        log.warn("Got UserBookedEventException", ex);
+        log.warn("User booked event operation failed: {}", ex.getMessage(), ex);
         var errorDto = getErrorMessageResponse("Error while cancelling registry request",
                 ex.getMessage());
         return ResponseEntity.
@@ -182,7 +182,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorMessageResponse> handleNotValidEventStatusException(
             NotValidEventStatusException ex
     ) {
-        log.warn("Got NotValidEventStatusException", ex);
+        log.warn("Invalid event status for requested operation: {}", ex.getMessage(), ex);
         var errorDto = getErrorMessageResponse("Error while checking status for deleting" +
                         " event or registration request",
                 ex.getMessage());
@@ -195,7 +195,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorMessageResponse> handleEventRegistrationNotFoundException(
             EventRegistrationNotFoundException ex
     ) {
-        log.warn("Got EventRegistrationNotFoundException", ex);
+        log.warn("Event registration not found: {}", ex.getMessage(), ex);
         var errorDto = getErrorMessageResponse("Registration search error",
                 ex.getMessage());
         return ResponseEntity.
@@ -207,7 +207,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorMessageResponse> handleInvalidEventRegistrationStatusException(
             InvalidEventRegistrationStatusException ex
     ) {
-        log.warn("Got InvalidEventRegistrationStatusException", ex);
+        log.warn("Invalid event registration status: {}", ex.getMessage(), ex);
         var errorDto = getErrorMessageResponse("Error while checking registration status",
                 ex.getMessage());
         return ResponseEntity.
@@ -219,7 +219,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorMessageResponse> handleIllegalStateException(
             IllegalStateException ex
     ) {
-        log.warn("Got IllegalStateException", ex);
+        log.warn("Illegal application state: {}", ex.getMessage(), ex);
         var errorDto = getErrorMessageResponse("Error while updating event",
                 ex.getMessage());
         return ResponseEntity.
@@ -231,11 +231,11 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorMessageResponse> handleConstraintViolationException(
             ConstraintViolationException ex
     ) {
-        log.warn("Got ConstraintViolationException", ex);
         String detailedMessage = ex.getConstraintViolations()
                 .stream()
                 .map(v -> v.getPropertyPath() + ": " + v.getMessage())
                 .collect(Collectors.joining(","));
+        log.warn("Constraint validation failed: {}", detailedMessage, ex);
         var errorDto = getErrorMessageResponse("Validation Error", detailedMessage);
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
@@ -246,7 +246,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorMessageResponse> handleLocationCountPlacesException(
             LocationCountPlacesException ex
     ) {
-        log.warn("Got LocationCountPlacesException", ex);
+        log.warn("Location update validation failed: {}", ex.getMessage(), ex);
         var errorDto = getErrorMessageResponse("Error while updating location",
                 ex.getMessage());
         return ResponseEntity.

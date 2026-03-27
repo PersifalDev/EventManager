@@ -18,6 +18,8 @@ public class KafkaEventSender {
     private String eventTopic;
 
     public void sendKafkaEvent(EventChangeKafkaMessage kafkaEventNotification) {
+        log.info("Sending event to Kafka with ownerId={},changedById={},eventId={}",
+                kafkaEventNotification.ownerId(),kafkaEventNotification.changedById(),kafkaEventNotification.eventId());
         kafkaTemplate.send(eventTopic, kafkaEventNotification.eventId(), kafkaEventNotification)
                 .thenAccept(r -> log.info(
                         "Event notification was successfully sent. eventId={}", kafkaEventNotification.eventId()))
