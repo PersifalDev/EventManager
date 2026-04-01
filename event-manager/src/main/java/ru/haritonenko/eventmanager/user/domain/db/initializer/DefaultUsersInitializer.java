@@ -33,15 +33,16 @@ public class DefaultUsersInitializer {
             log.warn("Default user '{}' already exists, skipping", login);
             return;
         }
-        UserEntity entity = new UserEntity(
-                null,
-                login,
-                passwordEncoder.encode(password),
-                21,
-                role,
-                new ArrayList<>(),
-                new ArrayList<>()
-        );
+
+        UserEntity entity = UserEntity.builder()
+                .login(login)
+                .password(passwordEncoder.encode(password))
+                .age(21)
+                .userRole(role)
+                .ownEvents(new ArrayList<>())
+                .registrations(new ArrayList<>())
+                .build();
+
         userRepository.save(entity);
         log.info("Default user '{}' created with role {}", login, role);
     }

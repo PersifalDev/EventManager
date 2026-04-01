@@ -34,3 +34,12 @@ databaseChangeLog:
             path: db/changelog/sql/004-create-event-registrations.sql
             splitStatements: true
             stripComments: true
+
+  - changeSet:
+      id: 005-add-audit-columns
+      author: haritonenko
+      changes:
+        - sqlFile:
+            path: db/changelog/sql/005-add-audit-columns.sql
+            splitStatements: true
+            stripComments: true

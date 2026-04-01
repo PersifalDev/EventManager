@@ -3,9 +3,13 @@ package ru.haritonenko.eventmanager.event.registration.domain.db.entity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
+import org.hibernate.proxy.HibernateProxy;
 import ru.haritonenko.eventmanager.event.domain.db.entity.EventEntity;
 import ru.haritonenko.eventmanager.event.registration.domain.status.EventRegistrationStatus;
 import ru.haritonenko.eventmanager.user.domain.db.entity.UserEntity;
+
+import java.time.OffsetDateTime;
+import java.util.Objects;
 
 @Entity
 @Table(
@@ -19,14 +23,12 @@ import ru.haritonenko.eventmanager.user.domain.db.entity.UserEntity;
 @Getter
 @Setter
 @ToString(exclude = {"user", "event"})
-@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @NoArgsConstructor
 @AllArgsConstructor
 public class EventRegistrationEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @EqualsAndHashCode.Include
     private Long id;
 
     @NotNull(message = "User can not be null for registration")
@@ -42,4 +44,43 @@ public class EventRegistrationEntity {
     @NotNull(message = "Event registration status can not be null")
     @Enumerated(EnumType.STRING)
     private EventRegistrationStatus status;
+    @Column(name = "created_at", updatable = false, nullable = false)
+    private OffsetDateTime createdAt;
+
+    @Column(name = "updated_at", nullable = false)
+    private OffsetDateTime updatedAt;
+
+    @PrePersist
+    private void onCreate() {
+        var now = OffsetDateTime.now();
+        createdAt = now;
+        updatedAt = now;
+    }
+
+    @PreUpdate
+    private void onUpdate() {
+        this.updatedAt = OffsetDateTime.now();
+    }
+
+    @Override
+    public final boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null) {
+            return false;
+        }
+        Class<?> objectEffectiveClass = o instanceof HibernateProxy proxy ? proxy.getHibernateLazyInitializer().getPersistentClass() : o.getClass();
+        Class<?> thisEffectiveClass = this instanceof HibernateProxy proxy ? proxy.getHibernateLazyInitializer().getPersistentClass() : this.getClass();
+        if (thisEffectiveClass != objectEffectiveClass) {
+            return false;
+        }
+        EventRegistrationEntity that = (EventRegistrationEntity) o;
+        return getId() != null && Objects.equals(getId(), that.getId());
+    }
+
+    @Override
+    public final int hashCode() {
+        return this instanceof HibernateProxy proxy ? proxy.getHibernateLazyInitializer().getPersistentClass().hashCode() : getClass().hashCode();
+    }
 }

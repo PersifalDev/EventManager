@@ -16,6 +16,8 @@ public interface UserEntityMapper {
     User toDomain(UserEntity entity);
 
     @Mapping(target = "id", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "updatedAt", ignore = true)
     @Mapping(target = "password", source = "hashedPassword")
     @Mapping(target = "userRole", expression = "java(UserRole.USER)")
     @Mapping(target = "ownEvents", expression = "java(new ArrayList<>())")

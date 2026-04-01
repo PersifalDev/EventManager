@@ -15,6 +15,8 @@ import java.util.ArrayList;
 public interface EventCreateMapper {
 
     @Mapping(target = "id", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "updatedAt", ignore = true)
     @Mapping(target = "name", source = "dto.name")
     @Mapping(target = "maxPlaces", source = "dto.maxPlaces")
     @Mapping(target = "date", source = "dto.date")

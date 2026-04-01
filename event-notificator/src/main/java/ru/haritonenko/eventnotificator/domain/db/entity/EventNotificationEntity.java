@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 @Entity
 @Table(name = "notifications")
@@ -32,4 +33,5 @@ public class EventNotificationEntity {
 
     @Column(name = "message", nullable = false, length = 2000)
     private String message;
+
 }

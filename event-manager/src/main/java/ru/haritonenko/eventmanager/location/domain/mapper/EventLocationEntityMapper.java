@@ -11,5 +11,7 @@ public interface EventLocationEntityMapper {
     EventLocation toDomain(EventLocationEntity entity);
 
     @Mapping(target = "events", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "updatedAt", ignore = true)
     EventLocationEntity toEntity(EventLocation domain);
 }
